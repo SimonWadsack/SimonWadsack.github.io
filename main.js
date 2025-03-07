@@ -15,9 +15,9 @@ function init() {
     ({ grid, plane } = initGrid(scene));
     objectManager = new ObjectManager(scene, grid, plane);
     creationManager = new CreationManager(objectManager);
-    selectionManager = new SelectionManager(scene, camera, objectManager, renderer.domElement);
-    selectionManager.init(controls);
-    editManager = new EditManager(objectManager);
+    selectionManager = new SelectionManager(scene, camera, objectManager, controls, renderer.domElement);
+    selectionManager.getTransformControls();
+    editManager = new EditManager();
     creationManager.createBasicBezierCurve();
     const bezierCurveObject = creationManager.createBasicBezierCurve();
     bezierCurveObject.moveZ(5);

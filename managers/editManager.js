@@ -1,44 +1,36 @@
 import { EventBus } from '../core/events.js';
 
-class EditManager{
-    constructor(objectManager){
-        this.objectManager = objectManager;
+class EditManager {
+    updateCallback;
+    selectedObject;
+    constructor() {
         this.updateCallback = null;
         this.selectedObject = null;
-
         EventBus.subscribe('objectSelected', (object) => this.selectObject(object));
         EventBus.subscribe('objectUnselected', () => this.unselectObject());
     }
-
-    update(){
-        if(this.updateCallback){
+    update() {
+        if (this.updateCallback) {
             this.updateCallback();
         }
     }
-
-    selectObject(object){
+    selectObject(object) {
+        if (!object) {
+            console.error('editManager:selectObject: Object is null!');
+            return;
+        }
         this.selectedObject = object;
         this.updateCallback = this.selectedObject.edit();
     }
-
-    unselectObject(){
+    unselectObject() {
+        if (!this.selectedObject) {
+            console.error('editManager:unselectObject: Object is null!');
+            return;
+        }
         this.updateCallback = null;
         this.selectedObject.unedit();
         this.selectedObject = null;
     }
-
-    /*selectBezierCurve(curveMesh){
-        this.editHandles = this.creationManager.createBezierCurveEditor(curveMesh);
-        this.updateCallback = this.updateBezierCurve.bind(this, curveMesh);
-    }
-
-    updateBezierCurve(curveMesh){
-        const controlPoints = curveMesh.userData.controlPoints;
-        for(let i = 0; i < controlPoints.length; i++){
-            const handle = this.editHandles.get(i);
-            updateControlPoint(curveMesh, i, handle.position);
-        }
-    }*/
 }
 
 export { EditManager };
