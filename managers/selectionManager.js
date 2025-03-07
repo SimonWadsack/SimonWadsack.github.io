@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { TransformControls } from 'three/examples/jsm/Addons';
 import { EventBus } from '../core/events.js';
+import { TransformControls } from 'three/examples/jsm/Addons.js';
 
 class SelectionManager {
     scene;
