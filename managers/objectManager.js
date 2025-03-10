@@ -1,3 +1,5 @@
+import { EventBus } from '../core/events.js';
+
 class ObjectManager {
     scene;
     grid;
@@ -20,6 +22,7 @@ class ObjectManager {
         this.scene.add(mesh);
         this.objects.set(visualObject.getUUID(), visualObject);
         this.meshLookup.set(mesh, visualObject);
+        EventBus.notify('objectAdded', visualObject);
     }
     getObjectByUUID(uuid) {
         if (!this.objects.has(uuid)) {
@@ -58,6 +61,10 @@ class ObjectManager {
         this.scene.remove(mesh);
         this.objects.delete(uuid);
         this.meshLookup.delete(mesh);
+        EventBus.notify('objectRemoved', visualObject);
+    }
+    getObjects() {
+        return Array.from(this.objects.values());
     }
     isGrid(object) {
         return object === this.grid;

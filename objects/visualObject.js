@@ -1,5 +1,5 @@
 import { MathUtils, SphereGeometry, MeshBasicMaterial, Mesh, Vector3 } from 'three';
-import { getEditHandleColor, getHighlightColor, getSelectedColor } from '../core/vars.js';
+import { getEditHandleColor } from '../core/vars.js';
 
 /**
  * An abstract class that represents a visual object in the scene.
@@ -22,6 +22,12 @@ class VisualObject {
         this.uuid = MathUtils.generateUUID();
         this.type = 'VisualObject';
         this.editHandles = new Map();
+    }
+    getName() {
+        return this.name;
+    }
+    setName(name) {
+        this.name = name;
     }
     getUUID() {
         return this.uuid;
@@ -112,16 +118,6 @@ class VisualObject {
     }
     moveZ(z) {
         this.move(0, 0, z);
-    }
-    highlight() {
-        if (!this.checkMaterial("highlight"))
-            return;
-        this.material.color.set(getHighlightColor());
-    }
-    select() {
-        if (!this.checkMaterial("select"))
-            return;
-        this.material.color.set(getSelectedColor());
     }
     checkMesh(origin) {
         if (this.mesh === null) {

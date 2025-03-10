@@ -1,19 +1,18 @@
-import { LaceElement } from '../Lace.js';
+import { LaceElement } from '../LaceElement.js';
 
-class NumberElement extends LaceElement {
+class TextElement extends LaceElement {
     obj;
     key;
     input;
     constructor(label, obj, key, options = {}) {
-        const { help = "", step = 1 } = options;
+        const { help = "" } = options;
         const input = document.createElement('sl-input');
         input.label = label;
-        input.step = step;
         input.helpText = help;
-        input.type = 'number';
+        input.type = 'text';
         input.value = obj[key];
         input.addEventListener('sl-input', () => {
-            obj[key] = parseFloat(input.value);
+            obj[key] = input.value;
             this.changed();
         });
         super(label, input);
@@ -35,4 +34,4 @@ class NumberElement extends LaceElement {
     }
 }
 
-export { NumberElement };
+export { TextElement };

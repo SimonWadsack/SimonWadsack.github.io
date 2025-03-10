@@ -1,26 +1,7 @@
-class LaceElement {
-    label;
-    element;
-    onChangeCallback = () => { };
-    updateCallbacks = [];
-    constructor(label, element) {
-        this.label = label;
-        this.element = element;
-    }
-    onChange(callback) {
-        this.onChangeCallback = callback;
-        return this;
-    }
-    changed() {
-        this.onChangeCallback();
-        for (const callback of this.updateCallbacks) {
-            callback();
-        }
-    }
-    registerUpdateCallback(callback) {
-        this.updateCallbacks.push(callback);
-    }
-}
+import { FolderElement } from './elements/folderElement.js';
+import 'three';
+import { GroupElement } from './elements/groupElement.js';
+
 class Lace {
     container;
     elements = [];
@@ -46,20 +27,85 @@ class Lace {
     }
     add(element) {
         element.setSize(this.small ? 'small' : 'medium');
-        const sameKeyElements = this.findSameObjectAndKeyElements(element);
-        for (const sameKeyElement of sameKeyElements) {
-            sameKeyElement.registerUpdateCallback(() => element.update());
-            element.registerUpdateCallback(() => sameKeyElement.update());
-        }
+        this.connect(element);
         const br = document.createElement('br');
         this.elements.push(element);
         this.brs.set(element, br);
         this.container.appendChild(element.element);
         this.container.appendChild(br);
     }
+    addFolder(label, options = {}) {
+        const folder = new FolderElement(label, this, options);
+        this.add(folder);
+        return folder;
+    }
+    addGroup(options = {}) {
+        const group = new GroupElement(this, options);
+        this.add(group);
+        return group;
+    }
+    hide(element) {
+        if (!this.elements.includes(element))
+            return;
+        if (element.element.dataset.display === undefined)
+            element.element.dataset.display = element.element.style.display;
+        element.element.style.display = 'none';
+        const br = this.brs.get(element);
+        if (br)
+            br.style.display = 'none';
+    }
+    hideAll() {
+        for (const element of this.elements) {
+            this.hide(element);
+        }
+    }
+    show(element) {
+        if (!this.elements.includes(element))
+            return;
+        element.element.style.display = element.element.dataset.display || '';
+        const br = this.brs.get(element);
+        if (br)
+            br.style.display = '';
+    }
+    showAll() {
+        for (const element of this.elements) {
+            this.show(element);
+        }
+    }
+    connect(element) {
+        if (element instanceof FolderElement)
+            return;
+        if (element instanceof GroupElement)
+            return;
+        const sameKeyElements = this.findSameObjectAndKeyElements(element);
+        for (const sameKeyElement of sameKeyElements) {
+            sameKeyElement.registerUpdateCallback(() => element.update());
+            element.registerUpdateCallback(() => sameKeyElement.update());
+        }
+    }
     findSameObjectAndKeyElements(element) {
-        return this.elements.filter(e => e.getObj() === element.getObj() && e.getKeys().some(key => element.getKeys().includes(key)));
+        var foundElements = [];
+        var workingElements = this.elements.slice();
+        while (workingElements.length > 0) {
+            const currentElement = workingElements.shift();
+            if (currentElement === undefined)
+                break;
+            if (currentElement instanceof FolderElement) {
+                workingElements.push(...currentElement.getElements());
+            }
+            else {
+                if (element.getObj() === currentElement.getObj()) {
+                    const keys = element.getKeys();
+                    for (const key of keys) {
+                        if (currentElement.getKeys().includes(key)) {
+                            foundElements.push(currentElement);
+                        }
+                    }
+                }
+            }
+        }
+        return foundElements;
     }
 }
 
-export { Lace, LaceElement };
+export { Lace };

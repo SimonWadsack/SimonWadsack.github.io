@@ -100,3 +100,19 @@ html, body {
 /*#endregion*/
 
 /*#endregion*/
+
+/*#region Custom Styles */
+
+.hierarchy-item::part(item):hover{
+    background-color: var(--sl-color-neutral-200);
+}
+
+.hierarchy-item.hover::part(item){
+    background-color: var(--sl-color-neutral-200);
+}
+
+.hierarchy-item::part(item--selected){
+    background-color: var(--sl-color-neutral-300);
+}
+
+/*#endregion*/

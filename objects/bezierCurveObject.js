@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { VisualObject } from './visualObject.js';
 import { BezierCurve } from '../utils/curves/bezierCurve.js';
-import { getSelectedColor } from '../core/vars.js';
+import { getSelectedColor, getHighlightColor } from '../core/vars.js';
 
 class BezierCurveObject extends VisualObject {
     controlPoints;
@@ -11,7 +11,7 @@ class BezierCurveObject extends VisualObject {
     radialSegments;
     curve;
     connectionVisual;
-    constructor(name, controlPoints = [new THREE.Vector3(-5, 0, 0), new THREE.Vector3(0, 5, 0), new THREE.Vector3(5, 0, 0)], color = 0x000000, segments = 100) {
+    constructor(name, controlPoints = [new THREE.Vector3(-5, 0, 0), new THREE.Vector3(0, 5, 0), new THREE.Vector3(5, 0, 0)], color = new THREE.Color(0x000000), segments = 100) {
         super(name);
         this.controlPoints = controlPoints;
         this.color = color;
@@ -83,8 +83,27 @@ class BezierCurveObject extends VisualObject {
     updateColor(color) {
         if (!this.checkMaterial("bezierCurveObject:updateColor"))
             return;
-        this.color = color;
+        this.color.set(color);
         this.material.color.set(color);
+    }
+    getColor() {
+        return this.color.clone();
+    }
+    highlight() {
+        if (!this.checkMaterial("highlight"))
+            return;
+        this.material.color.set(getHighlightColor());
+    }
+    resetHighlight() {
+        this.resetColor();
+    }
+    select() {
+        if (!this.checkMaterial("select"))
+            return;
+        this.material.color.set(getSelectedColor());
+    }
+    resetSelect() {
+        this.resetColor();
     }
     resetColor() {
         if (!this.checkMaterial("resetColor"))

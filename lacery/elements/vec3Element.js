@@ -1,4 +1,4 @@
-import { LaceElement } from '../Lace.js';
+import { LaceElement } from '../LaceElement.js';
 
 class Vec3Element extends LaceElement {
     obj;
@@ -44,9 +44,7 @@ class Vec3Element extends LaceElement {
             this.changed();
         });
         xInput.style.width = '30%';
-        xInput.style.marginRight = '1em';
         yInput.style.width = '30%';
-        yInput.style.marginRight = '1em';
         zInput.style.width = '30%';
         div.appendChild(xInput);
         div.appendChild(yInput);

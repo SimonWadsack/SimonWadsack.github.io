@@ -8,6 +8,7 @@ class EditManager {
         this.selectedObject = null;
         EventBus.subscribe('objectSelected', (object) => this.selectObject(object));
         EventBus.subscribe('objectUnselected', () => this.unselectObject());
+        EventBus.subscribe('objectChanged', () => this.update());
     }
     update() {
         if (this.updateCallback) {

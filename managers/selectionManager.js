@@ -14,6 +14,8 @@ class SelectionManager {
     hoveredObject;
     selectedObject;
     dragging;
+    active;
+    hierarchy;
     constructor(scene, camera, objectManager, controls, domElement) {
         this.scene = scene;
         this.camera = camera;
@@ -25,9 +27,13 @@ class SelectionManager {
         this.hoveredObject = null;
         this.selectedObject = null;
         this.dragging = false;
+        this.active = false;
+        this.hierarchy = null;
         domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
         domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
         domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
+        domElement.addEventListener('mouseenter', () => this.active = true);
+        domElement.addEventListener('mouseleave', () => this.active = false);
         const transformControls = new TransformControls(this.camera, this.domElement);
         transformControls.addEventListener('dragging-changed', (event) => {
             controls.enabled = !event.value;
@@ -35,6 +41,10 @@ class SelectionManager {
         });
         this.scene.add(transformControls.getHelper());
         this.transformControls = transformControls;
+        this.transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged'));
+    }
+    registerHierachy(hierarchy) {
+        this.hierarchy = hierarchy;
     }
     getTransformControls() {
         return this.transformControls;
@@ -49,28 +59,18 @@ class SelectionManager {
     }
     onMouseUp(event) {
         if (this.hoveredObject) { //clicked on hovered object
-            if (this.selectedObject) { //we already have a selected object
-                this.selectedObject.resetColor();
-                this.selectedObject = null;
-                this.transformControls.detach();
-                EventBus.notify('objectUnselected');
-            }
-            //select the hovered object
-            this.selectedObject = this.hoveredObject;
-            this.hoveredObject = null;
-            this.selectedObject.select();
-            EventBus.notify('objectSelected', this.selectedObject);
+            this.select(this.hoveredObject);
         }
         else { //we clicked somehwere else and did not move the mouse
             if (this.selectedObject && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
-                this.selectedObject.resetColor();
-                this.selectedObject = null;
+                this.resetSelected();
                 this.transformControls.detach();
-                EventBus.notify('objectUnselected');
             }
         }
     }
     update() {
+        if (!this.active)
+            return;
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(this.scene.children, true);
         //do we have any intersections?
@@ -99,12 +99,7 @@ class SelectionManager {
                 if (this.selectedObject && this.selectedObject === object) { // is the object the selected object?
                     return;
                 }
-                if (this.hoveredObject && this.hoveredObject !== object) { //if we hovered over an object and it is not the same as the current object, reset
-                    this.resetHovered();
-                }
-                //highlight the object
-                object.highlight();
-                this.hoveredObject = object;
+                this.hover(object);
             }
             else { //not selectable and not editHandle, so reset the hovered object
                 this.resetHovered();
@@ -114,10 +109,58 @@ class SelectionManager {
             this.resetHovered();
         }
     }
+    hover(object) {
+        if (this.hierarchy) {
+            this.hierarchy.viewportHover(object.getUUID());
+        }
+        this.doHover(object);
+    }
+    doHover(object) {
+        if (this.hoveredObject && this.hoveredObject !== object) {
+            this.hoveredObject.resetHighlight();
+        }
+        this.hoveredObject = object;
+        this.hoveredObject.highlight();
+    }
     resetHovered() {
+        if (this.hierarchy) {
+            this.hierarchy.viewportDehover();
+        }
+        this.doResetHovered();
+    }
+    doResetHovered() {
         if (this.hoveredObject) {
-            this.hoveredObject.resetColor();
+            this.hoveredObject.resetHighlight();
             this.hoveredObject = null;
+        }
+    }
+    select(object) {
+        if (this.hierarchy) {
+            this.hierarchy.viewportSelect(object.getUUID());
+        }
+        this.doSelect(object);
+    }
+    doSelect(object) {
+        if (this.selectedObject && this.selectedObject !== object) {
+            this.selectedObject.resetSelect();
+            EventBus.notify('objectUnselected');
+        }
+        this.hoveredObject = null;
+        this.selectedObject = object;
+        this.selectedObject.select();
+        EventBus.notify('objectSelected', this.selectedObject);
+    }
+    resetSelected() {
+        if (this.hierarchy) {
+            this.hierarchy.viewportDeselect();
+        }
+        this.doResetSelected();
+    }
+    doResetSelected() {
+        if (this.selectedObject) {
+            this.selectedObject.resetSelect();
+            this.selectedObject = null;
+            EventBus.notify('objectUnselected');
         }
     }
     //find the first selectable object in the list of intersects

@@ -1,4 +1,5 @@
-import { LaceElement } from '../Lace.js';
+import { Color } from 'three';
+import { LaceElement } from '../LaceElement.js';
 
 class ColorElement extends LaceElement {
     obj;
@@ -14,6 +15,7 @@ class ColorElement extends LaceElement {
         const colorPicker = document.createElement('sl-color-picker');
         colorPicker.format = 'rgb';
         colorPicker.noFormatToggle = true;
+        colorPicker.swatches = ["#27ae60", "#2980b9", "#8e44ad", "#16a085", "#f39c12", "#d35400", "#c0392b", "#7f8c8d"];
         colorPicker.value = toRGB(obj[key]);
         colorPicker.addEventListener('sl-input', () => {
             obj[key] = toColor(colorPicker.value);
@@ -44,11 +46,10 @@ class ColorElement extends LaceElement {
     }
 }
 function toRGB(color) {
-    return `rgb(${color.r * 255}, ${color.g * 255}, ${color.b * 255})`;
+    return "#" + color.getHexString();
 }
 function toColor(rgb) {
-    const [r, g, b] = rgb.replace('rgb', '').replaceAll('(', '').replace(')', '').split(',').map((c) => parseFloat(c));
-    return { r: r / 255, g: g / 255, b: b / 255, isColor: true };
+    return new Color(rgb);
 }
 
 export { ColorElement };
