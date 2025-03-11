@@ -140,6 +140,7 @@ class Hierarchy {
         const object = this.objectManager.getObjectByUUID(uuid);
         if (object) {
             this.selectedItem = null;
+            this.selectionManager.getTransformControls().detach();
             this.removeObject(object);
             this.objectManager.removeObject(uuid);
         }
