@@ -1,14 +1,16 @@
 import { EventBus } from '../core/events.js';
+import { HierarchyMenu } from './hierarchy/hierarchyMenu.js';
 
 class Hierarchy {
     container;
     objectManager;
     selectionManager;
+    menu;
     tree;
     items;
     hoveredItem;
     selectedItem;
-    constructor(container, objectManager, selectionManager, options = {}) {
+    constructor(container, objectManager, selectionManager, creationManager, options = {}) {
         const { darkMode = false } = options;
         this.objectManager = objectManager;
         this.selectionManager = selectionManager;
@@ -18,7 +20,7 @@ class Hierarchy {
         this.selectionManager.registerHierachy(this);
         const div = document.createElement('div');
         div.className = 'hierarchy';
-        div.style.padding = '1em';
+        //div.style.padding = '1em';
         div.style.border = 'solid 1px var(--sl-color-neutral-300)';
         div.style.borderRadius = 'var(--sl-border-radius-small)';
         div.style.backgroundColor = 'var(--sl-color-neutral-0)';
@@ -28,6 +30,7 @@ class Hierarchy {
         if (darkMode) {
             div.classList.add('sl-theme-dark');
         }
+        this.menu = new HierarchyMenu(div, creationManager, this.selectionChangedUUID.bind(this), this.removeSelected.bind(this));
         this.tree = document.createElement('sl-tree');
         this.tree.selection = 'leaf';
         div.appendChild(this.tree);
@@ -36,13 +39,22 @@ class Hierarchy {
         this.tree.addEventListener('sl-selection-change', (event) => this.selectionChanged(event));
         this.container.addEventListener('mouseup', () => this.deselect());
         EventBus.subscribe('objectAdded', (object) => this.addObject(object));
-        EventBus.subscribe('objectRemoved', (object) => this.removeObject(object));
+        //EventBus.subscribe('objectRemoved', (object: VisualObject) => this.removeObject(object));
         EventBus.subscribe('objectChanged', () => this.updateHierarchy());
+        EventBus.subscribe('objectNameChanged', () => this.updateHierarchy());
     }
     updateHierarchy() {
         this.items.clear();
         this.tree.innerHTML = '';
-        this.objectManager.getObjects().forEach(object => this.addObject(object));
+        this.objectManager.getObjects().forEach(object => {
+            this.addObject(object);
+            if (object.getUUID() === this.hoveredItem) {
+                this.viewportHover(object.getUUID());
+            }
+            if (object.getUUID() === this.selectedItem?.dataset.uuid) {
+                this.viewportSelect(object.getUUID());
+            }
+        });
     }
     addObject(object) {
         const item = document.createElement('sl-tree-item');
@@ -56,6 +68,8 @@ class Hierarchy {
         item.appendChild(text);
         item.addEventListener('mouseenter', () => this.hovered(object.getUUID()));
         item.addEventListener('mouseleave', () => this.dehovered(object.getUUID()));
+        item.addEventListener('sl-expand', () => this.selectionChangedUUID(object.getUUID()));
+        item.addEventListener('sl-collapse', () => this.selectionChangedUUID(object.getUUID()));
         this.items.set(object.getUUID(), item);
         this.tree.appendChild(item);
     }
@@ -97,6 +111,13 @@ class Hierarchy {
             item.classList.remove('hover');
         }
     }
+    selectionChangedUUID(uuid) {
+        const item = this.items.get(uuid);
+        if (item) {
+            this.viewportSelect(uuid);
+            this.selectionChanged(new CustomEvent('sl-selection-change', { detail: { selection: [item] } }));
+        }
+    }
     selectionChanged(event) {
         const item = event.detail.selection[0];
         if (!item)
@@ -108,6 +129,19 @@ class Hierarchy {
         const object = this.objectManager.getObjectByUUID(uuid);
         if (object) {
             this.selectionManager.doSelect(object);
+        }
+    }
+    removeSelected() {
+        if (!this.selectedItem)
+            return;
+        const uuid = this.selectedItem.dataset.uuid;
+        if (!uuid)
+            return;
+        const object = this.objectManager.getObjectByUUID(uuid);
+        if (object) {
+            this.selectedItem = null;
+            this.removeObject(object);
+            this.objectManager.removeObject(uuid);
         }
     }
     viewportSelect(uuid) {

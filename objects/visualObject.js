@@ -32,6 +32,9 @@ class VisualObject {
     getUUID() {
         return this.uuid;
     }
+    getType() {
+        return this.type;
+    }
     edit() {
         console.warn('VisualObject: Edit not implemented!');
         return () => { console.error('VisualObject: Edit not implemented!'); };
@@ -46,6 +49,9 @@ class VisualObject {
         handle.userData.isEditHandle = true;
         this.editHandles.set(index, handle);
         this.mesh.add(handle);
+    }
+    hasEditHandle(index) {
+        return this.editHandles.has(index);
     }
     setEditHandlePosition(index, position) {
         if (!this.editHandles.has(index)) {
@@ -66,6 +72,19 @@ class VisualObject {
         if (!object)
             return null;
         return object.position;
+    }
+    removeEditHandle(index) {
+        if (!this.checkMesh("removeEditHandle"))
+            return;
+        if (!this.editHandles.has(index)) {
+            console.error('VisualObject:removeEditHandle: Edit handle not found!');
+            return;
+        }
+        const object = this.editHandles.get(index);
+        if (!object)
+            return;
+        this.mesh.remove(object);
+        this.editHandles.delete(index);
     }
     removeEditHandles() {
         if (!this.checkMesh("removeEditHandles"))

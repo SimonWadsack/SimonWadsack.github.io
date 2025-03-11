@@ -10,6 +10,7 @@ class TextElement extends LaceElement {
         input.label = label;
         input.helpText = help;
         input.type = 'text';
+        input.autocomplete = 'off';
         input.value = obj[key];
         input.addEventListener('sl-input', () => {
             obj[key] = input.value;

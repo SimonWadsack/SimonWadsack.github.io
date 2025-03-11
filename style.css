@@ -22,11 +22,11 @@ html, body {
 }
 
 #inspector{
-    background-color: var(--sl-color-primary-600);
+    background-color: var(--sl-color-neutral-0);
 }
 
 #hierarchy{
-    background-color: var(--sl-color-success-600);
+    background-color: var(--sl-color-neutral-0);
 }
 
 /*#endregion*/
@@ -103,16 +103,32 @@ html, body {
 
 /*#region Custom Styles */
 
-.hierarchy-item::part(item):hover{
+.hierarchy-item:nth-child(odd){
     background-color: var(--sl-color-neutral-200);
 }
 
+.hierarchy-item::part(item):hover{
+    background-color: var(--sl-color-neutral-300);
+}
+
 .hierarchy-item.hover::part(item){
-    background-color: var(--sl-color-neutral-200);
+    background-color: var(--sl-color-neutral-300);
 }
 
 .hierarchy-item::part(item--selected){
     background-color: var(--sl-color-neutral-300);
+}
+
+.menu-item::part(base):hover{
+    background-color: var(--sl-color-neutral-200);
+}
+
+.list-item:nth-child(odd){
+    background-color: var(--sl-color-neutral-100);
+}
+
+.list-item:nth-child(even){
+    background-color: var(--sl-color-neutral-200);
 }
 
 /*#endregion*/

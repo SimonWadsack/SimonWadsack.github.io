@@ -7,18 +7,20 @@ class Inspector {
     lace;
     currentInspector;
     objectInspectors;
-    constructor(container) {
+    constructor(container, selectionManager) {
         this.currentInspector = null;
         this.lace = new Lace(container);
         this.objectInspectors = new Map();
-        this.objectInspectors.set('bezierCurve', new BezierCurveInspector(this.lace));
+        this.objectInspectors.set('bezierCurve', new BezierCurveInspector(this.lace, selectionManager));
         EventBus.subscribe('objectSelected', (object) => this.updateInspector(object));
         EventBus.subscribe('objectUnselected', () => this.updateInspector(null));
+        EventBus.subscribe('objectRemoved', () => this.updateInspector(null));
         EventBus.subscribe('objectChanged', () => this.objectChanged());
     }
     updateInspector(object) {
         if (!object) {
             this.lace.hideAll();
+            this.currentInspector?.deselect();
             this.currentInspector = null;
             return;
         }

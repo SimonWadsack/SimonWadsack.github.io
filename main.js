@@ -1,4 +1,4 @@
-import { initScene, initGrid } from './core/scene.js';
+import { initScene, initGrid, initTooltip } from './core/scene.js';
 import { ObjectManager } from './managers/objectManager.js';
 import { CreationManager } from './managers/creationManager.js';
 import { SelectionManager } from './managers/selectionManager.js';
@@ -6,7 +6,7 @@ import { EditManager } from './managers/editManager.js';
 import { Inspector } from './components/inspector.js';
 import { Hierarchy } from './components/hierarchy.js';
 
-let scene, camera, renderer, controls, grid, plane, objectManager, creationManager, selectionManager;
+let scene, camera, renderer, controls, grid, plane, tooltip, objectManager, creationManager, selectionManager;
 function init() {
     const viewportElement = document.getElementById('viewport');
     if (!viewportElement)
@@ -19,18 +19,14 @@ function init() {
         return;
     ({ scene, camera, renderer, controls } = initScene(viewportElement));
     ({ grid, plane } = initGrid(scene));
+    tooltip = initTooltip(viewportElement);
     objectManager = new ObjectManager(scene, grid, plane);
     creationManager = new CreationManager(objectManager);
-    selectionManager = new SelectionManager(scene, camera, objectManager, controls, renderer.domElement);
+    selectionManager = new SelectionManager(scene, camera, objectManager, controls, renderer.domElement, tooltip);
     selectionManager.getTransformControls();
     new EditManager();
-    new Inspector(inspectorElement);
-    new Hierarchy(hierarchyElement, objectManager, selectionManager);
-    creationManager.createBasicBezierCurve();
-    const bezierCurveObject = creationManager.createBasicBezierCurve();
-    bezierCurveObject.moveZ(5);
-    const bezierCurveObject2 = creationManager.createBasicBezierCurve();
-    bezierCurveObject2.moveZ(-5);
+    new Inspector(inspectorElement, selectionManager);
+    new Hierarchy(hierarchyElement, objectManager, selectionManager, creationManager);
     renderer.setAnimationLoop(render);
 }
 function render() {

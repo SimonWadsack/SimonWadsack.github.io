@@ -15,8 +15,9 @@ class SelectionManager {
     selectedObject;
     dragging;
     active;
+    tooltip;
     hierarchy;
-    constructor(scene, camera, objectManager, controls, domElement) {
+    constructor(scene, camera, objectManager, controls, domElement, tooltip) {
         this.scene = scene;
         this.camera = camera;
         this.objectManager = objectManager;
@@ -28,6 +29,7 @@ class SelectionManager {
         this.selectedObject = null;
         this.dragging = false;
         this.active = false;
+        this.tooltip = tooltip;
         this.hierarchy = null;
         domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
         domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
@@ -35,6 +37,7 @@ class SelectionManager {
         domElement.addEventListener('mouseenter', () => this.active = true);
         domElement.addEventListener('mouseleave', () => this.active = false);
         const transformControls = new TransformControls(this.camera, this.domElement);
+        transformControls.setTranslationSnap(0.01);
         transformControls.addEventListener('dragging-changed', (event) => {
             controls.enabled = !event.value;
             this.dragging = event.value;
@@ -49,9 +52,20 @@ class SelectionManager {
     getTransformControls() {
         return this.transformControls;
     }
+    isActive() {
+        return this.active;
+    }
+    getMouse() {
+        return this.mouse;
+    }
+    getCamera() {
+        return this.camera;
+    }
     onMouseMove(event) {
         this.mouse.x = (event.clientX / this.domElement.clientWidth) * 2 - 1;
         this.mouse.y = -(event.clientY / this.domElement.clientHeight) * 2 + 1;
+        this.tooltip.style.left = event.clientX + 10 + 'px';
+        this.tooltip.style.top = event.clientY + 10 + 'px';
     }
     onMouseDown(event) {
         this.mouseDown.x = event.clientX;
@@ -64,7 +78,6 @@ class SelectionManager {
         else { //we clicked somehwere else and did not move the mouse
             if (this.selectedObject && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
                 this.resetSelected();
-                this.transformControls.detach();
             }
         }
     }
@@ -114,6 +127,7 @@ class SelectionManager {
             this.hierarchy.viewportHover(object.getUUID());
         }
         this.doHover(object);
+        this.showTooltip(object);
     }
     doHover(object) {
         if (this.hoveredObject && this.hoveredObject !== object) {
@@ -127,6 +141,7 @@ class SelectionManager {
             this.hierarchy.viewportDehover();
         }
         this.doResetHovered();
+        this.hideTooltip();
     }
     doResetHovered() {
         if (this.hoveredObject) {
@@ -142,8 +157,7 @@ class SelectionManager {
     }
     doSelect(object) {
         if (this.selectedObject && this.selectedObject !== object) {
-            this.selectedObject.resetSelect();
-            EventBus.notify('objectUnselected');
+            this.doResetSelected();
         }
         this.hoveredObject = null;
         this.selectedObject = object;
@@ -160,8 +174,16 @@ class SelectionManager {
         if (this.selectedObject) {
             this.selectedObject.resetSelect();
             this.selectedObject = null;
+            this.transformControls.detach();
             EventBus.notify('objectUnselected');
         }
+    }
+    showTooltip(object) {
+        this.tooltip.innerHTML = "<b>" + object.getName() + "</b></br><i>Type:</i> " + object.getType();
+        this.tooltip.style.display = 'block';
+    }
+    hideTooltip() {
+        this.tooltip.style.display = 'none';
     }
     //find the first selectable object in the list of intersects
     findMesh(intersects) {

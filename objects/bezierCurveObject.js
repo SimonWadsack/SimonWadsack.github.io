@@ -64,17 +64,39 @@ class BezierCurveObject extends VisualObject {
     addControlPoint(point) {
         this.controlPoints.push(point);
         this.recompute();
+        this.updateConnectionVisual();
+        this.createEditHandle(this.controlPoints.length - 1);
+        this.setEditHandlePosition(this.controlPoints.length - 1, point);
     }
     removeControlPoint(index) {
+        if (this.controlPoints.length < 3)
+            return;
         this.controlPoints.splice(index, 1);
         this.recompute();
+        this.updateConnectionVisual();
+        if (this.hasEditHandle(index)) {
+            this.removeEditHandle(index);
+        }
     }
     updateControlPoint(index, point) {
-        this.controlPoints[index] = point;
+        this.controlPoints[index].set(point.x, point.y, point.z);
         this.recompute();
+        this.updateConnectionVisual();
+        if (this.hasEditHandle(index)) {
+            this.setEditHandlePosition(index, point);
+        }
+    }
+    updateConnectionVisual() {
+        if (this.connectionVisual === null)
+            return;
+        this.connectionVisual.geometry.dispose();
+        this.connectionVisual.geometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
     }
     getControlPoint(index) {
         return this.controlPoints[index];
+    }
+    getControlPoints() {
+        return this.controlPoints.slice();
     }
     updateSegments(segments) {
         this.segments = segments;

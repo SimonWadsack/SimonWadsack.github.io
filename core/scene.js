@@ -66,10 +66,31 @@ function initGrid(scene) {
     scene.add(plane);
     return { grid, plane };
 }
+function initTooltip(container) {
+    const tooltip = document.createElement('div');
+    tooltip.style.position = 'absolute';
+    tooltip.style.backgroundColor = 'var(--sl-color-neutral-100)';
+    tooltip.style.color = 'var(--sl-input-color)';
+    tooltip.style.fontFamily = 'var(--sl-font-sans)';
+    tooltip.style.fontSize = 'var(--sl-font-size-small)';
+    tooltip.style.padding = '0.5em';
+    tooltip.style.borderRadius = 'var(--sl-border-radius-small)';
+    tooltip.style.border = 'solid';
+    tooltip.style.borderWidth = '1px';
+    tooltip.style.borderColor = 'var(--sl-color-neutral-300)';
+    tooltip.style.pointerEvents = 'none';
+    tooltip.style.display = 'none';
+    tooltip.style.zIndex = '1000';
+    //tooltip.style.minWidth = '100px';
+    //tooltip.style.minHeight = '200px';
+    tooltip.innerText = "TEST";
+    container.appendChild(tooltip);
+    return tooltip;
+}
 function resize(container, camera, renderer) {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
-export { initGrid, initScene };
+export { initGrid, initScene, initTooltip };

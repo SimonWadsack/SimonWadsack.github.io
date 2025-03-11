@@ -32,15 +32,15 @@ class Vec3Element extends LaceElement {
         zInput.step = yStep;
         zInput.value = obj[zKey];
         xInput.addEventListener('sl-input', () => {
-            obj[xKey] = parseFloat(xInput.value);
+            obj[xKey] = isNaN(parseFloat(xInput.value)) ? 0 : parseFloat(xInput.value);
             this.changed();
         });
         yInput.addEventListener('sl-input', () => {
-            obj[yKey] = parseFloat(yInput.value);
+            obj[yKey] = isNaN(parseFloat(yInput.value)) ? 0 : parseFloat(yInput.value);
             this.changed();
         });
         zInput.addEventListener('sl-input', () => {
-            obj[zKey] = parseFloat(zInput.value);
+            obj[zKey] = isNaN(parseFloat(zInput.value)) ? 0 : parseFloat(zInput.value);
             this.changed();
         });
         xInput.style.width = '30%';
