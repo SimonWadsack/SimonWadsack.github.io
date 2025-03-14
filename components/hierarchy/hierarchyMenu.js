@@ -1,8 +1,8 @@
-import { App } from '../../core/app.js';
-
 class HierarchyMenu {
+    creationManager;
     selectionChanged;
-    constructor(div, selectionChanged, removeSelected) {
+    constructor(div, creationManager, selectionChanged, removeSelected) {
+        this.creationManager = creationManager;
         this.selectionChanged = selectionChanged;
         const hierarchyMenu = document.createElement('div');
         const buttons = document.createElement('sl-button-group');
@@ -63,7 +63,7 @@ class HierarchyMenu {
         div.appendChild(hierarchyMenu);
     }
     addBezierCurve() {
-        const bezierCurve = App.getCreationManager().createBasicBezierCurve();
+        const bezierCurve = this.creationManager.createBasicBezierCurve();
         this.selectionChanged(bezierCurve.getUUID());
     }
 }

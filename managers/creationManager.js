@@ -1,9 +1,10 @@
 import { Vector3, Color } from 'three';
 import { BezierCurveObject } from '../objects/bezierCurveObject.js';
-import { App } from '../core/app.js';
 
 class CreationManager {
-    constructor() {
+    objectManager;
+    constructor(objectManager) {
+        this.objectManager = objectManager;
     }
     createBasicBezierCurve() {
         const controlPoints = [new Vector3(-5, 0, 0), new Vector3(0, 5, 0), new Vector3(5, 0, 0)];
@@ -11,7 +12,7 @@ class CreationManager {
         const colors = ["#7f8c8d"];
         const color = colors[Math.floor(Math.random() * colors.length)];
         const bezierCurveObject = new BezierCurveObject('Basic BezierCurve', controlPoints, new Color(color));
-        App.getObjectManager().addObject(bezierCurveObject);
+        this.objectManager.addObject(bezierCurveObject);
         return bezierCurveObject;
     }
 }

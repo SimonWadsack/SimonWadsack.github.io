@@ -4,7 +4,6 @@ import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
 import { EventBus } from '../../core/events.js';
-import { App } from '../../core/app.js';
 
 class BezierCurveInspectorParams {
     name;
@@ -23,11 +22,13 @@ class BezierCurveInspector {
     group;
     params;
     currentObject;
+    selectionManager;
     raycaster = new Raycaster();
-    constructor(lace) {
+    constructor(lace, selectionManager) {
         this.lace = lace;
         this.params = new BezierCurveInspectorParams();
         this.currentObject = null;
+        this.selectionManager = selectionManager;
         this.group = this.lace.addGroup();
         this.group.add(new TextElement("", this.params, 'name'));
         this.group.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
@@ -38,15 +39,15 @@ class BezierCurveInspector {
         window.addEventListener('keyup', (event) => {
             if (!this.currentObject)
                 return;
-            if (!App.getSelectionManager().isActive())
+            if (!this.selectionManager.isActive())
                 return;
             if (event.key === 'Delete' || event.key === 'r') {
                 this.listRemove();
             }
             else if (event.key === 'Insert' || event.key === 'e') {
-                this.raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
+                this.raycaster.setFromCamera(this.selectionManager.getMouse(), this.selectionManager.getCamera());
                 const forward = new Vector3();
-                App.getCamera().getWorldDirection(forward);
+                this.selectionManager.getCamera().getWorldDirection(forward);
                 const lastControlPoint = this.params.controlPoints[this.params.controlPoints.length - 1].getPosition();
                 const plane = new Plane().setFromNormalAndCoplanarPoint(forward, lastControlPoint);
                 const intersection = new Vector3();
@@ -54,7 +55,7 @@ class BezierCurveInspector {
                 intersection.x = Math.round(intersection.x * 100) / 100;
                 intersection.y = Math.round(intersection.y * 100) / 100;
                 intersection.z = Math.round(intersection.z * 100) / 100;
-                this.addControlPoint(intersection.sub(this.params.position));
+                this.addControlPoint(intersection);
             }
         });
     }
@@ -93,7 +94,7 @@ class BezierCurveInspector {
         this.currentObject.setName(this.params.name);
         this.currentObject.setPosition(this.params.position);
         this.currentObject.updateColor(this.params.color);
-        EventBus.notify('objectNameChanged', "general" /* EEnv.GENERAL */);
+        EventBus.notify('objectNameChanged');
     }
     listChanged(index) {
         if (!this.currentObject)
@@ -118,7 +119,7 @@ class BezierCurveInspector {
     listRemove() {
         if (!this.currentObject)
             return;
-        App.getTransformControls().detach();
+        this.selectionManager.getTransformControls().detach();
         this.currentObject.removeControlPoint(this.params.controlPoints.length - 1);
         this.objectChanged();
     }

@@ -131,9 +131,4 @@ html, body {
     background-color: var(--sl-color-neutral-200);
 }
 
-.hierarchy-item::part(label){
-    width: 100%;
-    justify-content: space-between;
-}
-
 /*#endregion*/

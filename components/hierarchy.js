@@ -1,19 +1,23 @@
 import { EventBus } from '../core/events.js';
 import { HierarchyMenu } from './hierarchy/hierarchyMenu.js';
-import { App } from '../core/app.js';
 
 class Hierarchy {
     container;
+    objectManager;
+    selectionManager;
     menu;
     tree;
     items;
     hoveredItem;
     selectedItem;
-    constructor(container, options = {}) {
+    constructor(container, objectManager, selectionManager, creationManager, options = {}) {
         const { darkMode = false } = options;
+        this.objectManager = objectManager;
+        this.selectionManager = selectionManager;
         this.items = new Map();
         this.hoveredItem = null;
         this.selectedItem = null;
+        this.selectionManager.registerHierachy(this);
         const div = document.createElement('div');
         div.className = 'hierarchy';
         //div.style.padding = '1em';
@@ -26,7 +30,7 @@ class Hierarchy {
         if (darkMode) {
             div.classList.add('sl-theme-dark');
         }
-        this.menu = new HierarchyMenu(div, this.selectionChangedUUID.bind(this), this.removeSelected.bind(this));
+        this.menu = new HierarchyMenu(div, creationManager, this.selectionChangedUUID.bind(this), this.removeSelected.bind(this));
         this.tree = document.createElement('sl-tree');
         this.tree.selection = 'leaf';
         div.appendChild(this.tree);
@@ -34,15 +38,15 @@ class Hierarchy {
         this.container = div;
         this.tree.addEventListener('sl-selection-change', (event) => this.selectionChanged(event));
         this.container.addEventListener('mouseup', () => this.deselect());
-        EventBus.subscribe('objectAdded', "general" /* EEnv.GENERAL */, (object) => this.addObject(object));
+        EventBus.subscribe('objectAdded', (object) => this.addObject(object));
         //EventBus.subscribe('objectRemoved', (object: VisualObject) => this.removeObject(object));
-        EventBus.subscribe('objectChanged', "general" /* EEnv.GENERAL */, () => this.updateHierarchy());
-        EventBus.subscribe('objectNameChanged', "general" /* EEnv.GENERAL */, () => this.updateHierarchy());
+        EventBus.subscribe('objectChanged', () => this.updateHierarchy());
+        EventBus.subscribe('objectNameChanged', () => this.updateHierarchy());
     }
     updateHierarchy() {
         this.items.clear();
         this.tree.innerHTML = '';
-        App.getObjectManager().getObjects().forEach(object => {
+        this.objectManager.getObjects().forEach(object => {
             this.addObject(object);
             if (object.getUUID() === this.hoveredItem) {
                 this.viewportHover(object.getUUID());
@@ -56,24 +60,12 @@ class Hierarchy {
         const item = document.createElement('sl-tree-item');
         item.dataset.uuid = object.getUUID();
         item.classList.add('hierarchy-item');
-        const div = document.createElement('div');
-        div.style.display = 'flex';
-        div.style.alignItems = 'center';
-        div.style.gap = '10px';
         const icon = document.createElement('sl-icon');
         icon.name = 'bezier';
-        div.appendChild(icon);
+        item.appendChild(icon);
         const text = document.createElement('span');
         text.textContent = object.getName();
-        div.appendChild(text);
-        item.appendChild(div);
-        const colorDiv = document.createElement('div');
-        colorDiv.style.color = '#' + object.getColor().getHexString();
-        colorDiv.style.marginRight = '20px';
-        const color = document.createElement('sl-icon');
-        color.name = 'circle-fill';
-        colorDiv.appendChild(color);
-        item.appendChild(colorDiv);
+        item.appendChild(text);
         item.addEventListener('mouseenter', () => this.hovered(object.getUUID()));
         item.addEventListener('mouseleave', () => this.dehovered(object.getUUID()));
         item.addEventListener('sl-expand', () => this.selectionChangedUUID(object.getUUID()));
@@ -89,11 +81,11 @@ class Hierarchy {
         }
     }
     hovered(uuid) {
-        const object = App.getObjectManager().getObjectByUUID(uuid);
+        const object = this.objectManager.getObjectByUUID(uuid);
         if (!object)
             return;
         this.hoveredItem = uuid;
-        App.getSelectionManager().doHover(object);
+        this.selectionManager.doHover(object);
     }
     viewportHover(uuid) {
         const item = this.items.get(uuid);
@@ -103,11 +95,11 @@ class Hierarchy {
         }
     }
     dehovered(uuid) {
-        const object = App.getObjectManager().getObjectByUUID(uuid);
+        const object = this.objectManager.getObjectByUUID(uuid);
         if (!object)
             return;
         this.hoveredItem = null;
-        App.getSelectionManager().doResetHovered();
+        this.selectionManager.doResetHovered();
     }
     viewportDehover() {
         const uuid = this.hoveredItem;
@@ -134,9 +126,9 @@ class Hierarchy {
         const uuid = item.dataset.uuid;
         if (!uuid)
             return;
-        const object = App.getObjectManager().getObjectByUUID(uuid);
+        const object = this.objectManager.getObjectByUUID(uuid);
         if (object) {
-            App.getSelectionManager().doSelect(object);
+            this.selectionManager.doSelect(object);
         }
     }
     removeSelected() {
@@ -145,12 +137,12 @@ class Hierarchy {
         const uuid = this.selectedItem.dataset.uuid;
         if (!uuid)
             return;
-        const object = App.getObjectManager().getObjectByUUID(uuid);
+        const object = this.objectManager.getObjectByUUID(uuid);
         if (object) {
             this.selectedItem = null;
-            App.getTransformControls().detach();
+            this.selectionManager.getTransformControls().detach();
             this.removeObject(object);
-            App.getObjectManager().removeObject(uuid);
+            this.objectManager.removeObject(uuid);
         }
     }
     viewportSelect(uuid) {
@@ -169,9 +161,9 @@ class Hierarchy {
         const uuid = this.selectedItem.dataset.uuid;
         if (!uuid)
             return;
-        const object = App.getObjectManager().getObjectByUUID(uuid);
+        const object = this.objectManager.getObjectByUUID(uuid);
         if (object) {
-            App.getSelectionManager().doResetSelected();
+            this.selectionManager.doResetSelected();
         }
         this.selectedItem = null;
     }
