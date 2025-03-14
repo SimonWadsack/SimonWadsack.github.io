@@ -5,8 +5,8 @@ import { SelectionManager } from './managers/selectionManager.js';
 import { EditManager } from './managers/editManager.js';
 import { Inspector } from './components/inspector.js';
 import { Hierarchy } from './components/hierarchy.js';
+import { App } from './core/app.js';
 
-let scene, camera, renderer, controls, grid, plane, tooltip, objectManager, creationManager, selectionManager;
 function init() {
     const viewportElement = document.getElementById('viewport');
     if (!viewportElement)
@@ -17,21 +17,26 @@ function init() {
     const hierarchyElement = document.getElementById('hierarchy');
     if (!hierarchyElement)
         return;
-    ({ scene, camera, renderer, controls } = initScene(viewportElement));
-    ({ grid, plane } = initGrid(scene));
-    tooltip = initTooltip(viewportElement);
-    objectManager = new ObjectManager(scene, grid, plane);
-    creationManager = new CreationManager(objectManager);
-    selectionManager = new SelectionManager(scene, camera, objectManager, controls, renderer.domElement, tooltip);
-    selectionManager.getTransformControls();
-    new EditManager();
-    new Inspector(inspectorElement, selectionManager);
-    new Hierarchy(hierarchyElement, objectManager, selectionManager, creationManager);
-    renderer.setAnimationLoop(render);
+    initScene(viewportElement);
+    initGrid();
+    initTooltip(viewportElement);
+    const objectManager = new ObjectManager();
+    App.setObjectManager(objectManager);
+    const creationManager = new CreationManager();
+    App.setCreationManager(creationManager);
+    const selectionManager = new SelectionManager();
+    App.setSelectionManager(selectionManager);
+    const editManager = new EditManager();
+    App.setEditManager(editManager);
+    const inspector = new Inspector(inspectorElement);
+    App.setInspector(inspector);
+    const hierarchy = new Hierarchy(hierarchyElement);
+    App.setHierarchy(hierarchy);
+    App.getRenderer().setAnimationLoop(render);
 }
 function render() {
-    renderer.render(scene, camera);
-    controls.update();
-    selectionManager.update();
+    App.getRenderer().render(App.getScene(), App.getCamera());
+    App.getOrbitControls().update();
+    App.getSelectionManager().update();
 }
 init();

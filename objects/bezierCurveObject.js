@@ -5,7 +5,6 @@ import { getSelectedColor, getHighlightColor } from '../core/vars.js';
 
 class BezierCurveObject extends VisualObject {
     controlPoints;
-    color;
     segments;
     radius;
     radialSegments;
@@ -21,11 +20,12 @@ class BezierCurveObject extends VisualObject {
         this.type = 'BezierCurveObject';
         this.curve = new BezierCurve(controlPoints);
         this.geometry = new THREE.TubeGeometry(this.curve, segments, this.radius, this.radialSegments, false);
-        this.material = new THREE.MeshBasicMaterial({ color: color });
+        this.material = new THREE.MeshBasicMaterial({ color: this.color });
         this.material.side = THREE.DoubleSide;
         this.setMesh(new THREE.Mesh(this.geometry, this.material));
         this.connectionVisual = null;
     }
+    //#region Editing
     edit() {
         if (!this.checkMesh("bezierCurveObject:edit"))
             return () => { console.error("bezierCurveObject:edit failed"); };
@@ -61,6 +61,20 @@ class BezierCurveObject extends VisualObject {
         this.mesh.remove(this.connectionVisual);
         this.connectionVisual = null;
     }
+    //#endregion
+    //#region Updates
+    updateSegments(segments) {
+        this.segments = segments;
+        this.recompute();
+    }
+    updateColor(color) {
+        if (!this.checkMaterial("bezierCurveObject:updateColor"))
+            return;
+        super.setColor(color);
+        this.material.color.set(color);
+    }
+    //#endregion
+    //#region Control Points
     addControlPoint(point) {
         this.controlPoints.push(point);
         this.recompute();
@@ -86,31 +100,14 @@ class BezierCurveObject extends VisualObject {
             this.setEditHandlePosition(index, point);
         }
     }
-    updateConnectionVisual() {
-        if (this.connectionVisual === null)
-            return;
-        this.connectionVisual.geometry.dispose();
-        this.connectionVisual.geometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
-    }
     getControlPoint(index) {
         return this.controlPoints[index];
     }
     getControlPoints() {
         return this.controlPoints.slice();
     }
-    updateSegments(segments) {
-        this.segments = segments;
-        this.recompute();
-    }
-    updateColor(color) {
-        if (!this.checkMaterial("bezierCurveObject:updateColor"))
-            return;
-        this.color.set(color);
-        this.material.color.set(color);
-    }
-    getColor() {
-        return this.color.clone();
-    }
+    //#endregion
+    //#region Highlight and Select (Override)
     highlight() {
         if (!this.checkMaterial("highlight"))
             return;
@@ -131,6 +128,14 @@ class BezierCurveObject extends VisualObject {
         if (!this.checkMaterial("resetColor"))
             return;
         this.material.color.set(this.color);
+    }
+    //#endregion
+    //#region Private Methods
+    updateConnectionVisual() {
+        if (this.connectionVisual === null)
+            return;
+        this.connectionVisual.geometry.dispose();
+        this.connectionVisual.geometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
     }
     recompute() {
         if (!this.checkMesh("bezierCurveObject:recompute"))

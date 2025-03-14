@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import { getBackgroundColor, getCameraPosition } from './vars.js';
+import { App } from './app.js';
 
 /**
  *
@@ -42,14 +43,14 @@ function initScene(container) {
     dirLight.shadow.camera.bottom = -10;
     scene.add(dirLight);
     window.addEventListener('resize', () => resize(container, camera, renderer));
-    return { scene, camera, renderer, controls };
+    App.setupScene(scene, camera, renderer, controls);
 }
 /**
  * @param {Scene} scene The Three.js scene
  * @returns The grid and the shadow plane
  * @description Initializes the grid and the shadow plane
  */
-function initGrid(scene) {
+function initGrid() {
     //create the grid
     const grid = new THREE.GridHelper(20, 40);
     grid.material.opacity = 0.75;
@@ -62,9 +63,9 @@ function initGrid(scene) {
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.receiveShadow = true;
     plane.position.set(0, -0.51, 0);
-    scene.add(grid);
-    scene.add(plane);
-    return { grid, plane };
+    App.getScene().add(grid);
+    App.getScene().add(plane);
+    App.setupGrid(grid, plane);
 }
 function initTooltip(container) {
     const tooltip = document.createElement('div');
@@ -85,7 +86,7 @@ function initTooltip(container) {
     //tooltip.style.minHeight = '200px';
     tooltip.innerText = "TEST";
     container.appendChild(tooltip);
-    return tooltip;
+    App.setTooltip(tooltip);
 }
 function resize(container, camera, renderer) {
     camera.aspect = container.clientWidth / container.clientHeight;

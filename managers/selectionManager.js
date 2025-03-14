@@ -1,13 +1,9 @@
 import * as THREE from 'three';
 import { EventBus } from '../core/events.js';
 import { TransformControls } from 'three/examples/jsm/Addons.js';
+import { App } from '../core/app.js';
 
 class SelectionManager {
-    scene;
-    camera;
-    objectManager;
-    domElement;
-    transformControls;
     raycaster;
     mouse;
     mouseDown;
@@ -15,13 +11,7 @@ class SelectionManager {
     selectedObject;
     dragging;
     active;
-    tooltip;
-    hierarchy;
-    constructor(scene, camera, objectManager, controls, domElement, tooltip) {
-        this.scene = scene;
-        this.camera = camera;
-        this.objectManager = objectManager;
-        this.domElement = domElement;
+    constructor() {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.mouseDown = new THREE.Vector2();
@@ -29,28 +19,21 @@ class SelectionManager {
         this.selectedObject = null;
         this.dragging = false;
         this.active = false;
-        this.tooltip = tooltip;
-        this.hierarchy = null;
+        const domElement = App.getRenderer().domElement;
         domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
         domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
         domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
         domElement.addEventListener('mouseenter', () => this.active = true);
         domElement.addEventListener('mouseleave', () => this.active = false);
-        const transformControls = new TransformControls(this.camera, this.domElement);
+        const transformControls = new TransformControls(App.getCamera(), domElement);
         transformControls.setTranslationSnap(0.01);
         transformControls.addEventListener('dragging-changed', (event) => {
-            controls.enabled = !event.value;
+            App.getOrbitControls().enabled = !event.value;
             this.dragging = event.value;
         });
-        this.scene.add(transformControls.getHelper());
-        this.transformControls = transformControls;
-        this.transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged'));
-    }
-    registerHierachy(hierarchy) {
-        this.hierarchy = hierarchy;
-    }
-    getTransformControls() {
-        return this.transformControls;
+        App.getScene().add(transformControls.getHelper());
+        transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "general" /* EEnv.GENERAL */));
+        App.setTransformControls(transformControls);
     }
     isActive() {
         return this.active;
@@ -58,14 +41,13 @@ class SelectionManager {
     getMouse() {
         return this.mouse;
     }
-    getCamera() {
-        return this.camera;
-    }
     onMouseMove(event) {
-        this.mouse.x = (event.clientX / this.domElement.clientWidth) * 2 - 1;
-        this.mouse.y = -(event.clientY / this.domElement.clientHeight) * 2 + 1;
-        this.tooltip.style.left = event.clientX + 10 + 'px';
-        this.tooltip.style.top = event.clientY + 10 + 'px';
+        const domElement = App.getRenderer().domElement;
+        this.mouse.x = (event.clientX / domElement.clientWidth) * 2 - 1;
+        this.mouse.y = -(event.clientY / domElement.clientHeight) * 2 + 1;
+        const tooltip = App.getTooltip();
+        tooltip.style.left = event.clientX + 10 + 'px';
+        tooltip.style.top = event.clientY + 10 + 'px';
     }
     onMouseDown(event) {
         this.mouseDown.x = event.clientX;
@@ -84,8 +66,9 @@ class SelectionManager {
     update() {
         if (!this.active)
             return;
-        this.raycaster.setFromCamera(this.mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+        this.raycaster.setFromCamera(this.mouse, App.getCamera());
+        const intersects = this.raycaster.intersectObjects(App.getScene().children, true);
+        const objectManager = App.getObjectManager();
         //do we have any intersections?
         if (intersects.length > 0) { //yes
             const mesh = this.findMesh(intersects); //find the mesh
@@ -94,21 +77,21 @@ class SelectionManager {
                 return;
             }
             //if the mesh is not associated with a visual object it must be editHandle or something else
-            if (!this.objectManager.isVisualObject(mesh)) {
+            if (!objectManager.isVisualObject(mesh)) {
                 this.resetHovered();
-                if (this.objectManager.isEditHandle(mesh) && !this.dragging) { //is the object editHandle and we are not moving the orbit controls
+                if (objectManager.isEditHandle(mesh) && !this.dragging) { //is the object editHandle and we are not moving the orbit controls
                     //make the object moveable
-                    this.transformControls.attach(mesh);
+                    App.getTransformControls().attach(mesh);
                 }
                 return;
             }
-            const object = this.objectManager.getVisualObjectByMesh(mesh); //get the visual object from the object manager
+            const object = objectManager.getVisualObjectByMesh(mesh); //get the visual object from the object manager
             //if no object was found (only not selectable objects were found), reset the hovered object
             if (object == null) {
                 this.resetHovered();
                 return;
             }
-            else if (this.objectManager.selectable(mesh) && !this.dragging) { //we found a selectable object and we are not moving the orbit controls
+            else if (objectManager.selectable(mesh) && !this.dragging) { //we found a selectable object and we are not moving the orbit controls
                 if (this.selectedObject && this.selectedObject === object) { // is the object the selected object?
                     return;
                 }
@@ -123,9 +106,7 @@ class SelectionManager {
         }
     }
     hover(object) {
-        if (this.hierarchy) {
-            this.hierarchy.viewportHover(object.getUUID());
-        }
+        App.getHierarchy().viewportHover(object.getUUID());
         this.doHover(object);
         this.showTooltip(object);
     }
@@ -137,9 +118,7 @@ class SelectionManager {
         this.hoveredObject.highlight();
     }
     resetHovered() {
-        if (this.hierarchy) {
-            this.hierarchy.viewportDehover();
-        }
+        App.getHierarchy().viewportDehover();
         this.doResetHovered();
         this.hideTooltip();
     }
@@ -150,9 +129,7 @@ class SelectionManager {
         }
     }
     select(object) {
-        if (this.hierarchy) {
-            this.hierarchy.viewportSelect(object.getUUID());
-        }
+        App.getHierarchy().viewportSelect(object.getUUID());
         this.doSelect(object);
     }
     doSelect(object) {
@@ -162,35 +139,33 @@ class SelectionManager {
         this.hoveredObject = null;
         this.selectedObject = object;
         this.selectedObject.select();
-        EventBus.notify('objectSelected', this.selectedObject);
+        EventBus.notify('objectSelected', "general" /* EEnv.GENERAL */, this.selectedObject);
     }
     resetSelected() {
-        if (this.hierarchy) {
-            this.hierarchy.viewportDeselect();
-        }
+        App.getHierarchy().viewportDeselect();
         this.doResetSelected();
     }
     doResetSelected() {
         if (this.selectedObject) {
             this.selectedObject.resetSelect();
             this.selectedObject = null;
-            this.transformControls.detach();
-            EventBus.notify('objectUnselected');
+            App.getTransformControls().detach();
+            EventBus.notify('objectUnselected', "general" /* EEnv.GENERAL */);
         }
     }
     showTooltip(object) {
-        this.tooltip.innerHTML = "<b>" + object.getName() + "</b></br><i>Type:</i> " + object.getType();
-        this.tooltip.style.display = 'block';
+        App.getTooltip().innerHTML = "<b>" + object.getName() + "</b></br><i>Type:</i> " + object.getType();
+        App.getTooltip().style.display = 'block';
     }
     hideTooltip() {
-        this.tooltip.style.display = 'none';
+        App.getTooltip().style.display = 'none';
     }
     //find the first selectable object in the list of intersects
     findMesh(intersects) {
         for (const intersect of intersects) {
             if (!(intersect.object instanceof THREE.Mesh))
                 continue;
-            if (this.objectManager.selectable(intersect.object) || this.objectManager.isEditHandle(intersect.object)) { //selectable and isEditHandle
+            if (App.getObjectManager().selectable(intersect.object) || App.getObjectManager().isEditHandle(intersect.object)) { //selectable and isEditHandle
                 return intersect.object;
             }
         }
