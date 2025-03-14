@@ -1,15 +1,10 @@
 import { EventBus } from '../core/events.js';
+import { App } from '../core/app.js';
 
 class ObjectManager {
-    scene;
-    grid;
-    plane;
     objects;
     meshLookup;
-    constructor(scene, grid, plane) {
-        this.scene = scene;
-        this.grid = grid;
-        this.plane = plane;
+    constructor() {
         this.objects = new Map();
         this.meshLookup = new Map();
     }
@@ -19,10 +14,10 @@ class ObjectManager {
             console.error(`addObject: Object with id ${visualObject.getUUID()} has no mesh!`);
             return;
         }
-        this.scene.add(mesh);
+        App.getScene().add(mesh);
         this.objects.set(visualObject.getUUID(), visualObject);
         this.meshLookup.set(mesh, visualObject);
-        EventBus.notify('objectAdded', visualObject);
+        EventBus.notify('objectAdded', "general" /* EEnv.GENERAL */, visualObject);
     }
     getObjectByUUID(uuid) {
         if (!this.objects.has(uuid)) {
@@ -58,19 +53,19 @@ class ObjectManager {
             console.error(`removeObject: Object with id ${uuid} has no mesh!`);
             return;
         }
-        this.scene.remove(mesh);
+        App.getScene().remove(mesh);
         this.objects.delete(uuid);
         this.meshLookup.delete(mesh);
-        EventBus.notify('objectRemoved', visualObject);
+        EventBus.notify('objectRemoved', "general" /* EEnv.GENERAL */, visualObject);
     }
     getObjects() {
         return Array.from(this.objects.values());
     }
     isGrid(object) {
-        return object === this.grid;
+        return object === App.getGrid();
     }
     isPlane(object) {
-        return object === this.plane;
+        return object === App.getPlane();
     }
 }
 
