@@ -19,6 +19,13 @@
       }
     </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace-autoloader.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "@shoelace-style/shoelace": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/+esm"
+        }
+      }
+    </script>
     <script type="module" crossorigin src="/core/vars.js"></script>
     <script type="module" crossorigin src="/core/app.js"></script>
     <script type="module" crossorigin src="/core/scene.js"></script>
@@ -49,7 +56,6 @@
     <script type="module" crossorigin src="/components/hierarchy/hierarchyMenu.js"></script>
     <script type="module" crossorigin src="/components/hierarchy.js"></script>
     <script type="module" crossorigin src="/managers/effectManager.js"></script>
-    <script type="module" crossorigin src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js"></script>
     <script type="module" crossorigin src="/main.js"></script>
     <link rel="stylesheet" crossorigin href="/style.css">
   </head>

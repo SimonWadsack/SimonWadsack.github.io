@@ -7,7 +7,7 @@ import { Inspector } from './components/inspector.js';
 import { Hierarchy } from './components/hierarchy.js';
 import { App } from './core/app.js';
 import { EffectManager } from './managers/effectManager.js';
-import { registerIconLibrary } from 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js';
+import { registerIconLibrary } from '@shoelace-style/shoelace';
 
 function init() {
     registerIconLibrary('lucide', {
