@@ -56,7 +56,7 @@ class ObjectManager {
         App.getScene().remove(mesh);
         this.objects.delete(uuid);
         this.meshLookup.delete(mesh);
-        EventBus.notify('objectRemoved', "general" /* EEnv.GENERAL */, visualObject);
+        EventBus.notify('objectRemoved', "all" /* EEnv.ALL */, visualObject);
     }
     getObjects() {
         return Array.from(this.objects.values());

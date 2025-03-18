@@ -12,10 +12,10 @@ class Inspector {
         this.lace = new Lace(container);
         this.objectInspectors = new Map();
         this.objectInspectors.set('bezierCurve', new BezierCurveInspector(this.lace));
-        EventBus.subscribe('objectSelected', "general" /* EEnv.GENERAL */, (object) => this.updateInspector(object));
-        EventBus.subscribe('objectUnselected', "general" /* EEnv.GENERAL */, () => this.updateInspector(null));
-        EventBus.subscribe('objectRemoved', "general" /* EEnv.GENERAL */, () => this.updateInspector(null));
-        EventBus.subscribe('objectChanged', "general" /* EEnv.GENERAL */, () => this.objectChanged());
+        EventBus.subscribe('objectSelected', "all" /* EEnv.ALL */, (object) => this.updateInspector(object));
+        EventBus.subscribe('objectUnselected', "all" /* EEnv.ALL */, () => this.updateInspector(null));
+        EventBus.subscribe('objectRemoved', "all" /* EEnv.ALL */, () => this.updateInspector(null));
+        EventBus.subscribe('objectChanged', "viewport" /* EEnv.VIEWPORT */, () => this.objectChanged());
     }
     updateInspector(object) {
         if (!object) {

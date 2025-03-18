@@ -1,5 +1,6 @@
 import { FolderElement } from './elements/folderElement.js';
 import 'three';
+import { TabElement } from './elements/tabElement.js';
 import { GroupElement } from './elements/groupElement.js';
 
 class Lace {
@@ -43,6 +44,11 @@ class Lace {
         const group = new GroupElement(this, options);
         this.add(group);
         return group;
+    }
+    addTab(options = {}) {
+        const tab = new TabElement(this, options);
+        this.add(tab);
+        return tab;
     }
     hide(element) {
         if (!this.elements.includes(element))

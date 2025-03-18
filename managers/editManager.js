@@ -6,9 +6,9 @@ class EditManager {
     constructor() {
         this.updateCallback = null;
         this.selectedObject = null;
-        EventBus.subscribe('objectSelected', "general" /* EEnv.GENERAL */, (object) => this.selectObject(object));
-        EventBus.subscribe('objectUnselected', "general" /* EEnv.GENERAL */, () => this.unselectObject());
-        EventBus.subscribe('objectChanged', "general" /* EEnv.GENERAL */, () => this.update());
+        EventBus.subscribe('objectSelected', "all" /* EEnv.ALL */, (object) => this.selectObject(object));
+        EventBus.subscribe('objectUnselected', "all" /* EEnv.ALL */, () => this.unselectObject());
+        EventBus.subscribe('objectChanged', "all" /* EEnv.ALL */, () => this.update());
     }
     update() {
         if (this.updateCallback) {

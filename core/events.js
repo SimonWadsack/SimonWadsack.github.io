@@ -3,21 +3,38 @@
  * and notifying events.
  */
 const EventBus = {
-    events: new Map(),
+    allEvents: new Map(),
+    generalEvents: new Map(),
+    viewportEvents: new Map(),
+    inspectorEvents: new Map(),
+    hierarchyEvents: new Map(),
     /**
      * Subscribes a callback function to a specific event.
      * @param {string} event - The name of the event to subscribe to.
      * @param {Function} callback - The callback function to be executed when the event is triggered.
      */
     subscribe(event, env, callback) {
-        if (!this.events.has(event)) {
-            this.events.set(event, new Map());
+        let envMap;
+        switch (env) {
+            case "all" /* EEnv.ALL */:
+                envMap = this.allEvents;
+                break;
+            case "general" /* EEnv.GENERAL */:
+                envMap = this.generalEvents;
+                break;
+            case "viewport" /* EEnv.VIEWPORT */:
+                envMap = this.viewportEvents;
+                break;
+            case "inspector" /* EEnv.INSPECTOR */:
+                envMap = this.inspectorEvents;
+                break;
+            case "hierarchy" /* EEnv.HIERARCHY */:
+                envMap = this.hierarchyEvents;
+                break;
         }
-        const envMap = this.events.get(event);
-        if (!envMap.has(env)) {
-            envMap.set(env, []);
-        }
-        envMap.get(env).push(callback);
+        if (!envMap.has(event))
+            envMap.set(event, []);
+        envMap.get(event).push(callback);
     },
     /**
      * Unsubscribes a callback function from a specific event.
@@ -25,13 +42,28 @@ const EventBus = {
      * @param {Function} callback - The callback function to be removed.
      */
     unsubscribe(event, env, callback) {
-        if (this.events.has(event)) {
-            const envMap = this.events.get(event);
-            if (envMap.has(env)) {
-                const index = envMap.get(env).indexOf(callback);
-                if (index !== -1)
-                    envMap.get(env).splice(index, 1);
-            }
+        let envMap;
+        switch (env) {
+            case "all" /* EEnv.ALL */:
+                envMap = this.allEvents;
+                break;
+            case "general" /* EEnv.GENERAL */:
+                envMap = this.generalEvents;
+                break;
+            case "viewport" /* EEnv.VIEWPORT */:
+                envMap = this.viewportEvents;
+                break;
+            case "inspector" /* EEnv.INSPECTOR */:
+                envMap = this.inspectorEvents;
+                break;
+            case "hierarchy" /* EEnv.HIERARCHY */:
+                envMap = this.hierarchyEvents;
+                break;
+        }
+        if (envMap.has(event)) {
+            const index = envMap.get(event).indexOf(callback);
+            if (index !== -1)
+                envMap.get(event).splice(index, 1);
         }
     },
     /**
@@ -40,9 +72,39 @@ const EventBus = {
      * @param {any} data - The data to be passed to the callback functions.
      */
     notify(event, env, data) {
-        if (this.events.has(event)) {
-            const envMap = this.events.get(event);
-            for (const callback of envMap.get(env)) {
+        let envMap;
+        switch (env) {
+            case "all" /* EEnv.ALL */:
+                {
+                    for (const map of [this.allEvents, this.generalEvents, this.viewportEvents, this.inspectorEvents, this.hierarchyEvents]) {
+                        if (map.has(event)) {
+                            for (const callback of map.get(event)) {
+                                callback(data);
+                            }
+                        }
+                    }
+                    return;
+                }
+            case "general" /* EEnv.GENERAL */:
+                envMap = this.generalEvents;
+                break;
+            case "viewport" /* EEnv.VIEWPORT */:
+                envMap = this.viewportEvents;
+                break;
+            case "inspector" /* EEnv.INSPECTOR */:
+                envMap = this.inspectorEvents;
+                break;
+            case "hierarchy" /* EEnv.HIERARCHY */:
+                envMap = this.hierarchyEvents;
+                break;
+        }
+        if (envMap.has(event)) {
+            for (const callback of envMap.get(event)) {
+                callback(data);
+            }
+        }
+        if (this.allEvents.has(event)) {
+            for (const callback of this.allEvents.get(event)) {
                 callback(data);
             }
         }

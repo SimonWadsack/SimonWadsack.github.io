@@ -11,6 +11,7 @@ class SelectionManager {
     selectedObject;
     dragging;
     active;
+    canEdit;
     constructor() {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
@@ -19,6 +20,7 @@ class SelectionManager {
         this.selectedObject = null;
         this.dragging = false;
         this.active = false;
+        this.canEdit = true;
         const domElement = App.getRenderer().domElement;
         domElement.addEventListener('mousemove', (event) => this.onMouseMove(event));
         domElement.addEventListener('mousedown', (event) => this.onMouseDown(event));
@@ -32,7 +34,7 @@ class SelectionManager {
             this.dragging = event.value;
         });
         App.getScene().add(transformControls.getHelper());
-        transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "general" /* EEnv.GENERAL */));
+        transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
         App.setTransformControls(transformControls);
     }
     isActive() {
@@ -79,7 +81,7 @@ class SelectionManager {
             //if the mesh is not associated with a visual object it must be editHandle or something else
             if (!objectManager.isVisualObject(mesh)) {
                 this.resetHovered();
-                if (objectManager.isEditHandle(mesh) && !this.dragging) { //is the object editHandle and we are not moving the orbit controls
+                if (objectManager.isEditHandle(mesh) && !this.dragging && this.canEdit) { //is the object editHandle and we are not moving the orbit controls
                     //make the object moveable
                     App.getTransformControls().attach(mesh);
                 }
@@ -104,6 +106,13 @@ class SelectionManager {
         else { //no, so reset the hovered object
             this.resetHovered();
         }
+    }
+    enableEditing() {
+        this.canEdit = true;
+    }
+    disableEditing() {
+        this.canEdit = false;
+        App.getTransformControls().detach();
     }
     hover(object) {
         App.getHierarchy().viewportHover(object.getUUID());
@@ -139,7 +148,7 @@ class SelectionManager {
         this.hoveredObject = null;
         this.selectedObject = object;
         this.selectedObject.select();
-        EventBus.notify('objectSelected', "general" /* EEnv.GENERAL */, this.selectedObject);
+        EventBus.notify('objectSelected', "viewport" /* EEnv.VIEWPORT */, this.selectedObject);
     }
     resetSelected() {
         App.getHierarchy().viewportDeselect();
@@ -150,7 +159,7 @@ class SelectionManager {
             this.selectedObject.resetSelect();
             this.selectedObject = null;
             App.getTransformControls().detach();
-            EventBus.notify('objectUnselected', "general" /* EEnv.GENERAL */);
+            EventBus.notify('objectUnselected', "all" /* EEnv.ALL */);
         }
     }
     showTooltip(object) {

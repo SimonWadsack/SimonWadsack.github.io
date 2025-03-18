@@ -1,7 +1,9 @@
 class App {
     static scene;
     static pCamera;
+    static oCamera;
     static renderer;
+    static effectComposer;
     static orbitControls;
     static grid;
     static plane;
@@ -11,8 +13,10 @@ class App {
     static selectionManager;
     static transformControls;
     static editManager;
+    static effectManager;
     static inspector;
     static hierarchy;
+    static isOrbitingBool = false;
     static getScene() {
         return this.scene;
     }
@@ -25,11 +29,20 @@ class App {
     static getOrbitControls() {
         return this.orbitControls;
     }
-    static setupScene(scene, camera, renderer, controls) {
+    static setupScene(scene, pCamera, oCamera, renderer, controls) {
         this.scene = scene;
-        this.pCamera = camera;
+        this.pCamera = pCamera;
+        this.oCamera = oCamera;
         this.renderer = renderer;
         this.orbitControls = controls;
+        this.orbitControls.addEventListener('start', () => this.isOrbitingBool = true);
+        this.orbitControls.addEventListener('end', () => this.isOrbitingBool = false);
+    }
+    static getEffectComposer() {
+        return this.effectComposer;
+    }
+    static setEffectComposer(effectComposer) {
+        this.effectComposer = effectComposer;
     }
     static getGrid() {
         return this.grid;
@@ -77,6 +90,12 @@ class App {
     static setEditManager(editManager) {
         this.editManager = editManager;
     }
+    static getEffectManager() {
+        return this.effectManager;
+    }
+    static setEffectManager(effectManager) {
+        this.effectManager = effectManager;
+    }
     static getInspector() {
         return this.inspector;
     }
@@ -88,6 +107,9 @@ class App {
     }
     static setHierarchy(hierarchy) {
         this.hierarchy = hierarchy;
+    }
+    static isOrbiting() {
+        return this.isOrbitingBool;
     }
 }
 

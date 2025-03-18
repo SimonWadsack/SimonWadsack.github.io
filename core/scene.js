@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
-import { getBackgroundColor, getCameraPosition } from './vars.js';
+import { getBackgroundColor, getPerspectiveCameraPosition, getOrthographicCameraPosition } from './vars.js';
 import { App } from './app.js';
 
 /**
@@ -13,9 +13,12 @@ function initScene(container) {
     //create the scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(getBackgroundColor());
-    //create the camera
+    //create the cameras
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(...getCameraPosition());
+    camera.position.set(...getPerspectiveCameraPosition());
+    const orthoSize = 100;
+    const orthographicCamera = new THREE.OrthographicCamera(container.clientWidth / -100, container.clientWidth / orthoSize, container.clientHeight / orthoSize, container.clientHeight / -100, 0.1, 1000);
+    orthographicCamera.position.set(...getOrthographicCameraPosition());
     //create the renderer
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(container.clientWidth, container.clientHeight);
@@ -43,7 +46,7 @@ function initScene(container) {
     dirLight.shadow.camera.bottom = -10;
     scene.add(dirLight);
     window.addEventListener('resize', () => resize(container, camera, renderer));
-    App.setupScene(scene, camera, renderer, controls);
+    App.setupScene(scene, camera, orthographicCamera, renderer, controls);
 }
 /**
  * @param {Scene} scene The Three.js scene

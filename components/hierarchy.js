@@ -1,5 +1,6 @@
 import { EventBus } from '../core/events.js';
 import { HierarchyMenu } from './hierarchy/hierarchyMenu.js';
+import { BezierCurveObject } from '../objects/bezierCurveObject.js';
 import { App } from '../core/app.js';
 
 class Hierarchy {
@@ -35,9 +36,9 @@ class Hierarchy {
         this.tree.addEventListener('sl-selection-change', (event) => this.selectionChanged(event));
         this.container.addEventListener('mouseup', () => this.deselect());
         EventBus.subscribe('objectAdded', "general" /* EEnv.GENERAL */, (object) => this.addObject(object));
-        //EventBus.subscribe('objectRemoved', (object: VisualObject) => this.removeObject(object));
-        EventBus.subscribe('objectChanged', "general" /* EEnv.GENERAL */, () => this.updateHierarchy());
-        EventBus.subscribe('objectNameChanged', "general" /* EEnv.GENERAL */, () => this.updateHierarchy());
+        EventBus.subscribe('objectChanged', "inspector" /* EEnv.INSPECTOR */, () => this.updateHierarchy());
+        EventBus.subscribe('objectNameChanged', "all" /* EEnv.ALL */, () => this.updateHierarchy());
+        EventBus.subscribe('inspectorTabChanged', "inspector" /* EEnv.INSPECTOR */, () => this.updateHierarchy());
     }
     updateHierarchy() {
         this.items.clear();
@@ -67,13 +68,33 @@ class Hierarchy {
         text.textContent = object.getName();
         div.appendChild(text);
         item.appendChild(div);
+        const barDiv = document.createElement('div');
+        barDiv.style.display = 'flex';
+        barDiv.style.flexDirection = 'row';
+        barDiv.style.marginRight = '20px';
+        item.appendChild(barDiv);
+        const deCasteljauDiv = document.createElement('div');
+        deCasteljauDiv.style.marginRight = '10px';
+        deCasteljauDiv.style.display = 'none';
+        //TODO: build custom hierarchy item for all objects
+        //BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD
+        if (object instanceof BezierCurveObject) {
+            if (object.getDeCasteljauActive()) {
+                deCasteljauDiv.style.display = '';
+            }
+        }
+        //BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD
+        const deCasteljau = document.createElement('sl-icon');
+        deCasteljau.name = 'spline';
+        deCasteljau.library = 'lucide';
+        deCasteljauDiv.appendChild(deCasteljau);
+        barDiv.appendChild(deCasteljauDiv);
         const colorDiv = document.createElement('div');
         colorDiv.style.color = '#' + object.getColor().getHexString();
-        colorDiv.style.marginRight = '20px';
         const color = document.createElement('sl-icon');
         color.name = 'circle-fill';
         colorDiv.appendChild(color);
-        item.appendChild(colorDiv);
+        barDiv.appendChild(colorDiv);
         item.addEventListener('mouseenter', () => this.hovered(object.getUUID()));
         item.addEventListener('mouseleave', () => this.dehovered(object.getUUID()));
         item.addEventListener('sl-expand', () => this.selectionChangedUUID(object.getUUID()));

@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 const binomialCoefficientCache = {};
 function binomialCoefficient(n, k) {
     if (k === 0 || k === n)
@@ -15,5 +17,14 @@ function binomialCoefficient(n, k) {
     binomialCoefficientCache[n][k] = result;
     return result;
 }
+function lerp3D(a, b, t) {
+    return new THREE.Vector3(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t));
+}
+function lerp3DMesh(a, b, t) {
+    return lerp3D(a.position, b.position, t);
+}
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
 
-export { binomialCoefficient };
+export { binomialCoefficient, lerp, lerp3D, lerp3DMesh };

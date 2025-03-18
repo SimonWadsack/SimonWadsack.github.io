@@ -6,8 +6,13 @@ import { EditManager } from './managers/editManager.js';
 import { Inspector } from './components/inspector.js';
 import { Hierarchy } from './components/hierarchy.js';
 import { App } from './core/app.js';
+import { EffectManager } from './managers/effectManager.js';
+import { registerIconLibrary } from '@shoelace-style/shoelace/dist/utilities/icon-library';
 
 function init() {
+    registerIconLibrary('lucide', {
+        resolver: name => `https://cdn.jsdelivr.net/npm/lucide-static@0.482.0/icons/${name}.svg`
+    });
     const viewportElement = document.getElementById('viewport');
     if (!viewportElement)
         return;
@@ -28,14 +33,17 @@ function init() {
     App.setSelectionManager(selectionManager);
     const editManager = new EditManager();
     App.setEditManager(editManager);
-    const inspector = new Inspector(inspectorElement);
-    App.setInspector(inspector);
+    const effectManager = new EffectManager();
+    App.setEffectManager(effectManager);
     const hierarchy = new Hierarchy(hierarchyElement);
     App.setHierarchy(hierarchy);
-    App.getRenderer().setAnimationLoop(render);
+    const inspector = new Inspector(inspectorElement);
+    App.setInspector(inspector);
+    render();
 }
 function render() {
-    App.getRenderer().render(App.getScene(), App.getCamera());
+    requestAnimationFrame(render);
+    App.getEffectComposer().render();
     App.getOrbitControls().update();
     App.getSelectionManager().update();
 }

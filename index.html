@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visualization of Curves and Surfaces</title>
+    <title>Visualization of Curves and Surfaces</title>
     <link rel="icon" href="/icons/splinevis.ico" />
     <!-- CDN Three.js -->
 
@@ -14,7 +14,8 @@
       {
         "imports": {
           "three": "https://cdn.jsdelivr.net/npm/three@v0.174.0/build/three.module.js",
-          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/Addons.js"
+          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/Addons.js",
+          "@shoelace-style/shoelace/dist/utilities/icon-library": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js"
         }
       }
     </script>
@@ -36,15 +37,20 @@
     <script type="module" crossorigin src="/lacery/LaceElement.js"></script>
     <script type="module" crossorigin src="/lacery/elements/groupElement.js"></script>
     <script type="module" crossorigin src="/lacery/elements/folderElement.js"></script>
+    <script type="module" crossorigin src="/lacery/elements/tabElement.js"></script>
     <script type="module" crossorigin src="/lacery/Lace.js"></script>
+    <script type="module" crossorigin src="/lacery/elements/sliderElement.js"></script>
     <script type="module" crossorigin src="/lacery/elements/textElement.js"></script>
     <script type="module" crossorigin src="/lacery/elements/colorElement.js"></script>
     <script type="module" crossorigin src="/lacery/elements/vec3Element.js"></script>
     <script type="module" crossorigin src="/lacery/elements/listElement.js"></script>
+    <script type="module" crossorigin src="/lacery/elements/labelElement.js"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierCurveInspector.js"></script>
     <script type="module" crossorigin src="/components/inspector.js"></script>
     <script type="module" crossorigin src="/components/hierarchy/hierarchyMenu.js"></script>
     <script type="module" crossorigin src="/components/hierarchy.js"></script>
+    <script type="module" crossorigin src="/managers/effectManager.js"></script>
+    <script type="module" crossorigin src="@shoelace-style/shoelace/dist/utilities/icon-library"></script>
     <script type="module" crossorigin src="/main.js"></script>
     <link rel="stylesheet" crossorigin href="/style.css">
   </head>
@@ -55,6 +61,6 @@
         <div id="hierarchy" class="h-1/2"></div>
         <div id="inspector" class="h-1/2"></div>
       </div>
-    </div>
+    </div>
   </body>
 </html>
