@@ -7,11 +7,11 @@ import { Inspector } from './components/inspector.js';
 import { Hierarchy } from './components/hierarchy.js';
 import { App } from './core/app.js';
 import { EffectManager } from './managers/effectManager.js';
-import { registerIconLibrary } from '@shoelace-style/shoelace';
+import { registerIconLibrary } from 'https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js';
 
 function init() {
     registerIconLibrary('lucide', {
-        resolver: name => { console.log('resolving: ', name); return `https://cdn.jsdelivr.net/npm/lucide-static@0.482.0/icons/${name}.svg`; }
+        resolver: (name) => `https://cdn.jsdelivr.net/npm/lucide-static@0.482.0/icons/${name}.svg`
     });
     const viewportElement = document.getElementById('viewport');
     if (!viewportElement)
