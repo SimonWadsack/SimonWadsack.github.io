@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Visualization of Curves and Surfaces</title>
+    <title>Visualization of Curves and Surfaces</title>
+
     <link rel="icon" href="/icons/splinevis.ico" />
     <!-- CDN Three.js -->
 
@@ -14,12 +15,12 @@
       {
         "imports": {
           "three": "https://cdn.jsdelivr.net/npm/three@v0.174.0/build/three.module.js",
-          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/Addons.js",
-          "@shoelace-style/shoelace/dist/utilities/icon-library": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js"
+          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/Addons.js"
         }
       }
     </script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace-autoloader.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/dist/utilities/icon-library.js"></script>
     <script type="module" crossorigin src="/core/vars.js"></script>
     <script type="module" crossorigin src="/core/app.js"></script>
     <script type="module" crossorigin src="/core/scene.js"></script>
@@ -50,7 +51,6 @@
     <script type="module" crossorigin src="/components/hierarchy/hierarchyMenu.js"></script>
     <script type="module" crossorigin src="/components/hierarchy.js"></script>
     <script type="module" crossorigin src="/managers/effectManager.js"></script>
-    <script type="module" crossorigin src="@shoelace-style/shoelace/dist/utilities/icon-library"></script>
     <script type="module" crossorigin src="/main.js"></script>
     <link rel="stylesheet" crossorigin href="/style.css">
   </head>
@@ -61,6 +61,7 @@
         <div id="hierarchy" class="h-1/2"></div>
         <div id="inspector" class="h-1/2"></div>
       </div>
-    </div>
+    </div>
+
   </body>
 </html>
