@@ -1,7 +1,8 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/Addons.js';
+import { OrbitControls, TransformControls } from 'three/examples/jsm/Addons.js';
 import { getBackgroundColor, getPerspectiveCameraPosition, getOrthographicCameraPosition } from './vars.js';
 import { App } from './app.js';
+import { EventBus } from './events.js';
 
 /**
  *
@@ -29,6 +30,22 @@ function initScene(container) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
+    const oControls = new OrbitControls(orthographicCamera, renderer.domElement);
+    oControls.enableDamping = true;
+    oControls.dampingFactor = 0.25;
+    oControls.enableRotate = false;
+    oControls.mouseButtons = {
+        LEFT: THREE.MOUSE.PAN,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN
+    };
+    const transformControls = new TransformControls(camera, renderer.domElement);
+    transformControls.setTranslationSnap(0.01);
+    transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
+    const oTransformControls = new TransformControls(orthographicCamera, renderer.domElement);
+    oTransformControls.setTranslationSnap(0.01);
+    oTransformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
+    oTransformControls.showY = false;
     //create the ambient light
     const light = new THREE.AmbientLight(0xf0f0f0, 1);
     scene.add(light);
@@ -45,8 +62,11 @@ function initScene(container) {
     dirLight.shadow.camera.top = 10;
     dirLight.shadow.camera.bottom = -10;
     scene.add(dirLight);
-    window.addEventListener('resize', () => resize(container, camera, renderer));
-    App.setupScene(scene, camera, orthographicCamera, renderer, controls);
+    window.addEventListener('resize', () => resize(container, camera, orthographicCamera, orthoSize, renderer));
+    window.addEventListener('keyup', (e) => { if (e.key === 'Control') {
+        App.switchDimension();
+    } });
+    App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls);
 }
 /**
  * @param {Scene} scene The Three.js scene
@@ -91,9 +111,14 @@ function initTooltip(container) {
     container.appendChild(tooltip);
     App.setTooltip(tooltip);
 }
-function resize(container, camera, renderer) {
+function resize(container, camera, oCamera, orthoSize, renderer) {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
+    oCamera.left = container.clientWidth / -100;
+    oCamera.right = container.clientWidth / orthoSize;
+    oCamera.top = container.clientHeight / orthoSize;
+    oCamera.bottom = container.clientHeight / -100;
+    oCamera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
 }
 

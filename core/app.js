@@ -5,31 +5,54 @@ class App {
     static renderer;
     static effectComposer;
     static orbitControls;
+    static oOrbitControls;
+    static transformControls;
+    static oTransformControls;
     static grid;
     static plane;
     static tooltip;
     static objectManager;
     static creationManager;
     static selectionManager;
-    static transformControls;
     static editManager;
     static effectManager;
     static inspector;
     static hierarchy;
     static isOrbitingBool = false;
+    static isDraggingBool = false;
+    static is2D = false;
+    static switchDimension() {
+        if (this.is2D) {
+            this.is2D = false;
+            this.oTransformControls.detach();
+            this.orbitControls.enabled = true;
+            this.oOrbitControls.enabled = false;
+        }
+        else {
+            this.is2D = true;
+            this.transformControls.detach();
+            this.orbitControls.enabled = false;
+            this.oOrbitControls.enabled = true;
+        }
+        App.getEffectManager().setupRenderPass();
+        App.getSelectionManager().doResetSelectedEditHandle();
+    }
     static getScene() {
         return this.scene;
     }
     static getCamera() {
-        return this.pCamera;
+        return this.is2D ? this.oCamera : this.pCamera;
     }
     static getRenderer() {
         return this.renderer;
     }
     static getOrbitControls() {
-        return this.orbitControls;
+        return this.is2D ? this.oOrbitControls : this.orbitControls;
     }
-    static setupScene(scene, pCamera, oCamera, renderer, controls) {
+    static getTransformControls() {
+        return this.is2D ? this.oTransformControls : this.transformControls;
+    }
+    static setupScene(scene, pCamera, oCamera, renderer, controls, oControls, transformControls, oTransformControls) {
         this.scene = scene;
         this.pCamera = pCamera;
         this.oCamera = oCamera;
@@ -37,6 +60,21 @@ class App {
         this.orbitControls = controls;
         this.orbitControls.addEventListener('start', () => this.isOrbitingBool = true);
         this.orbitControls.addEventListener('end', () => this.isOrbitingBool = false);
+        this.oOrbitControls = oControls;
+        this.oOrbitControls.addEventListener('start', () => this.isOrbitingBool = true);
+        this.oOrbitControls.addEventListener('end', () => this.isOrbitingBool = false);
+        this.transformControls = transformControls;
+        this.transformControls.addEventListener('dragging-changed', (event) => {
+            this.orbitControls.enabled = !event.value;
+            this.isDraggingBool = event.value;
+        });
+        this.scene.add(this.transformControls.getHelper());
+        this.oTransformControls = oTransformControls;
+        this.oTransformControls.addEventListener('dragging-changed', (event) => {
+            this.oOrbitControls.enabled = !event.value;
+            this.isDraggingBool = event.value;
+        });
+        this.scene.add(this.oTransformControls.getHelper());
     }
     static getEffectComposer() {
         return this.effectComposer;
@@ -78,12 +116,6 @@ class App {
     static setSelectionManager(selectionManager) {
         this.selectionManager = selectionManager;
     }
-    static getTransformControls() {
-        return this.transformControls;
-    }
-    static setTransformControls(transformControls) {
-        this.transformControls = transformControls;
-    }
     static getEditManager() {
         return this.editManager;
     }
@@ -110,6 +142,9 @@ class App {
     }
     static isOrbiting() {
         return this.isOrbitingBool;
+    }
+    static isDragging() {
+        return this.isDraggingBool;
     }
 }
 

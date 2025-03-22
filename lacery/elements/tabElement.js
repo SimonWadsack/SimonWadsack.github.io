@@ -62,6 +62,7 @@ class TabElement extends LaceElement {
     }
     show(label) {
         this.tabGroup.show(label);
+        this.eventFunctions.get(label).onSel();
     }
     getActiveTab() {
         return this.activeTab;

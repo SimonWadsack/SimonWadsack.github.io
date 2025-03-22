@@ -4,9 +4,11 @@ import { App } from '../core/app.js';
 class ObjectManager {
     objects;
     meshLookup;
+    editHandleLookup;
     constructor() {
         this.objects = new Map();
         this.meshLookup = new Map();
+        this.editHandleLookup = new Map();
     }
     addObject(visualObject) {
         const mesh = visualObject.getMesh();
@@ -19,6 +21,18 @@ class ObjectManager {
         this.meshLookup.set(mesh, visualObject);
         EventBus.notify('objectAdded', "general" /* EEnv.GENERAL */, visualObject);
     }
+    addEditHandle(editHandle) {
+        const parent = editHandle.getParentObject();
+        const parentMesh = parent.getMesh();
+        if (!parentMesh) {
+            console.error(`addEditHandle: Parent has no mesh!`);
+            return;
+        }
+        const mesh = editHandle.getMesh();
+        parentMesh.add(mesh);
+        this.editHandleLookup.set(mesh, editHandle);
+        EventBus.notify('editHandleAdded', "general" /* EEnv.GENERAL */, editHandle);
+    }
     getObjectByUUID(uuid) {
         if (!this.objects.has(uuid)) {
             console.error(`getObjectById: Object with uuid ${uuid} not found!`);
@@ -30,7 +44,13 @@ class ObjectManager {
         return this.meshLookup.has(mesh);
     }
     isEditHandle(mesh) {
-        return mesh.userData.isEditHandle;
+        if (this.editHandleLookup.has(mesh)) {
+            const editHandle = this.editHandleLookup.get(mesh);
+            if (editHandle && editHandle.getActive()) {
+                return true;
+            }
+        }
+        return false;
     }
     isVisualObject(mesh) {
         return this.meshLookup.has(mesh);
@@ -41,6 +61,13 @@ class ObjectManager {
             return null;
         }
         return this.meshLookup.get(mesh);
+    }
+    getEditHandleByMesh(mesh) {
+        if (!this.editHandleLookup.has(mesh)) {
+            console.error(`getEditHandleByMesh: Edit handle with mesh ${mesh} not found!`);
+            return null;
+        }
+        return this.editHandleLookup.get(mesh);
     }
     removeObject(uuid) {
         const visualObject = this.getObjectByUUID(uuid);
@@ -57,6 +84,22 @@ class ObjectManager {
         this.objects.delete(uuid);
         this.meshLookup.delete(mesh);
         EventBus.notify('objectRemoved', "all" /* EEnv.ALL */, visualObject);
+    }
+    removeEditHandle(editHandle) {
+        if (!editHandle) {
+            console.error(`removeEditHandle: Edit handle ${editHandle} not found!`);
+            return;
+        }
+        const parent = editHandle.getParentObject();
+        const parentMesh = parent.getMesh();
+        if (!parentMesh) {
+            console.error(`removeEditHandle: Parent has no mesh!`);
+            return;
+        }
+        const mesh = editHandle.getMesh();
+        parentMesh.remove(mesh);
+        this.editHandleLookup.delete(mesh);
+        EventBus.notify('editHandleRemoved', "all" /* EEnv.ALL */, editHandle);
     }
     getObjects() {
         return Array.from(this.objects.values());

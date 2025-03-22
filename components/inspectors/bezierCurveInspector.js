@@ -4,7 +4,6 @@ import { TextElement } from '../../lacery/elements/textElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
-import { BezierCurveObject } from '../../objects/bezierCurveObject.js';
 import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { LabelElement } from '../../lacery/elements/labelElement.js';
@@ -29,6 +28,7 @@ class BezierCurveInspector {
     params;
     currentObject;
     raycaster = new Raycaster();
+    lastControlPointFront = false;
     constructor(lace) {
         this.lace = lace;
         this.params = new BezierCurveInspectorParams();
@@ -38,8 +38,34 @@ class BezierCurveInspector {
         objectTab.add(new TextElement("", this.params, 'name'));
         objectTab.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
         objectTab.add(new ColorElement("Color", this.params, 'color'));
+        objectTab.registerOnSelected(() => {
+            if (!this.currentObject)
+                return;
+            const mesh = this.currentObject.getMesh();
+            if (!mesh)
+                return;
+            App.getTransformControls().attach(mesh);
+            this.currentObject.disableEditControlPoint();
+            App.getSelectionManager().disableEditing();
+        });
+        objectTab.registerOnDeSelected(() => {
+            if (!this.currentObject)
+                return;
+            App.getTransformControls().detach();
+        });
         const controlPointsTab = this.tab.addTab('Control Points', 'waypoints');
         controlPointsTab.add(new ListElement("Control Points", this.params.controlPoints, this.listChanged.bind(this), this.listAdd.bind(this), this.listRemove.bind(this), { scrollFix: true }));
+        controlPointsTab.registerOnSelected(() => {
+            if (!this.currentObject)
+                return;
+            this.currentObject.enableEditControlPoint();
+            App.getSelectionManager().enableEditing();
+        });
+        controlPointsTab.registerOnDeSelected(() => {
+            if (!this.currentObject)
+                return;
+            this.currentObject.disableEditControlPoint();
+        });
         const deCasteljauTab = this.tab.addTab('DeCasteljau', 'spline');
         deCasteljauTab.add(new LabelElement("De-Casteljau Visualization"));
         const slider = new SliderElement("T", this.params, 'deCasteljauT', { min: 0, max: 1, step: 0.01 });
@@ -54,7 +80,6 @@ class BezierCurveInspector {
             if (!this.currentObject)
                 return;
             this.currentObject.disableDeCasteljau();
-            App.getSelectionManager().enableEditing();
         });
         this.tab.onChange(() => this.inspectorChanged());
         this.lace.hide(this.tab);
@@ -72,14 +97,14 @@ class BezierCurveInspector {
                 this.raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
                 const forward = new Vector3();
                 App.getCamera().getWorldDirection(forward);
-                const lastControlPoint = this.params.controlPoints[this.params.controlPoints.length - 1].getPosition();
+                const lastControlPoint = !this.lastControlPointFront ? this.params.controlPoints[this.params.controlPoints.length - 1].getPosition() : this.params.controlPoints[0].getPosition();
                 const plane = new Plane().setFromNormalAndCoplanarPoint(forward, lastControlPoint);
                 const intersection = new Vector3();
                 this.raycaster.ray.intersectPlane(plane, intersection);
                 intersection.x = Math.round(intersection.x * 100) / 100;
                 intersection.y = Math.round(intersection.y * 100) / 100;
                 intersection.z = Math.round(intersection.z * 100) / 100;
-                this.addControlPoint(intersection.sub(this.params.position));
+                this.addControlPoint(intersection.sub(this.params.position), this.lastControlPointFront);
             }
         });
         window.addEventListener('mousemove', (event) => {
@@ -94,23 +119,23 @@ class BezierCurveInspector {
             this.raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
             var intersection = this.raycaster.intersectObject(this.currentObject.getCollisionMesh(), false);
             if (intersection.length > 0) {
-                this.currentObject.updateDeCasteljauFromNearestPoint(intersection[0].point);
+                const curvePoint = intersection[0].point.sub(this.currentObject.getPosition());
+                this.currentObject.updateDeCasteljauFromNearestPoint(curvePoint);
                 this.params.deCasteljauT = this.currentObject.getDeCasteljauT();
                 slider.update();
                 return;
             }
         });
-        EventBus.subscribe('objectAdded', "general" /* EEnv.GENERAL */, () => { this.tab.show('Object'); });
-        EventBus.subscribe('objectSelected', "viewport" /* EEnv.VIEWPORT */, (object) => {
-            if (object instanceof BezierCurveObject) {
-                if (object.getDeCasteljauActive()) {
-                    this.tab.show('DeCasteljau');
-                    App.getSelectionManager().disableEditing();
-                }
-                else if (this.tab.getActiveTab() === 'DeCasteljau') {
-                    this.tab.show('Object');
-                    App.getSelectionManager().enableEditing();
-                }
+        EventBus.subscribe('editHandleSelected', "all" /* EEnv.ALL */, (editHandle) => {
+            if (!this.currentObject)
+                return;
+            if (!this.currentObject.getEditControlPointActive())
+                return;
+            if (editHandle.getIndex() === 0) {
+                this.lastControlPointFront = true;
+            }
+            else if (editHandle.getIndex() === this.params.controlPoints.length - 1) {
+                this.lastControlPointFront = false;
             }
         });
     }
@@ -118,6 +143,16 @@ class BezierCurveInspector {
         this.lace.hideAll();
         this.currentObject = object;
         this.objectChanged();
+        if (object.getDeCasteljauActive()) {
+            this.tab.show('DeCasteljau');
+        }
+        else if (object.getEditControlPointActive()) {
+            this.tab.show('Control Points');
+        }
+        else {
+            this.tab.show('Object');
+        }
+        this.lastControlPointFront = false;
         this.lace.show(this.tab);
     }
     deselect() {
@@ -177,10 +212,10 @@ class BezierCurveInspector {
         const newPosition = this.getNewPosition(last, preLast);
         this.addControlPoint(newPosition);
     }
-    addControlPoint(position) {
+    addControlPoint(position, front = false) {
         if (!this.currentObject)
             return;
-        this.currentObject.addControlPoint(position);
+        this.currentObject.addControlPoint(position, front);
         this.objectChanged();
     }
     listRemove() {

@@ -1,5 +1,6 @@
-import { Color, MathUtils, Vector3, SphereGeometry, MeshBasicMaterial, Mesh } from 'three';
-import { getEditHandleColor } from '../core/vars.js';
+import { Color, MathUtils, Vector3 } from 'three';
+import { EditHandle } from './editHandle.js';
+import { App } from '../core/app.js';
 
 /**
  * An abstract class that represents a visual object in the scene.
@@ -57,10 +58,11 @@ class VisualObject {
     setMesh(mesh) {
         this.mesh = mesh;
         this.mesh.castShadow = true;
+        return true;
     }
     getPosition() {
         if (!this.checkMesh("getPosition"))
-            return null;
+            return new Vector3();
         const result = new Vector3();
         result.copy(this.mesh.position);
         return result;
@@ -100,15 +102,9 @@ class VisualObject {
     }
     //#region edit handles
     createEditHandle(index) {
-        if (!this.checkMesh("createEditHandle"))
-            return;
-        const geometry = new SphereGeometry(0.2);
-        const material = new MeshBasicMaterial({ color: getEditHandleColor() });
-        const handle = new Mesh(geometry, material);
-        handle.castShadow = true;
-        handle.userData.isEditHandle = true;
-        this.editHandles.set(index, handle);
-        this.mesh.add(handle);
+        const editHandle = new EditHandle(this, index);
+        this.editHandles.set(index, editHandle);
+        App.getObjectManager().addEditHandle(editHandle);
     }
     hasEditHandle(index) {
         return this.editHandles.has(index);
@@ -121,7 +117,7 @@ class VisualObject {
         const object = this.editHandles.get(index);
         if (!object)
             return;
-        object.position.set(position.x, position.y, position.z);
+        object.setPosition(position);
     }
     getEditHandlePosition(index) {
         if (!this.editHandles.has(index)) {
@@ -131,28 +127,54 @@ class VisualObject {
         const object = this.editHandles.get(index);
         if (!object)
             return null;
-        return object.position;
+        return object.getPosition();
     }
     removeEditHandle(index) {
-        if (!this.checkMesh("removeEditHandle"))
-            return;
         if (!this.editHandles.has(index)) {
             console.error('VisualObject:removeEditHandle: Edit handle not found!');
             return;
         }
-        const object = this.editHandles.get(index);
-        if (!object)
+        const editHandle = this.editHandles.get(index);
+        if (!editHandle)
             return;
-        this.mesh.remove(object);
+        App.getObjectManager().removeEditHandle(editHandle);
         this.editHandles.delete(index);
     }
     removeEditHandles() {
-        if (!this.checkMesh("removeEditHandles"))
-            return;
         this.editHandles.forEach((handle, index) => {
-            this.mesh.remove(handle);
+            App.getObjectManager().removeEditHandle(handle);
         });
         this.editHandles.clear();
+    }
+    hideEditHandle(index) {
+        if (!this.editHandles.has(index)) {
+            console.error('VisualObject:hideEditHandle: Edit handle not found!');
+            return;
+        }
+        const editHandle = this.editHandles.get(index);
+        if (!editHandle)
+            return;
+        editHandle.hide();
+    }
+    showEditHandle(index) {
+        if (!this.editHandles.has(index)) {
+            console.error('VisualObject:showEditHandle: Edit handle not found!');
+            return;
+        }
+        const editHandle = this.editHandles.get(index);
+        if (!editHandle)
+            return;
+        editHandle.show();
+    }
+    hideEditHandles() {
+        this.editHandles.forEach((handle, index) => {
+            handle.hide();
+        });
+    }
+    showEditHandles() {
+        this.editHandles.forEach((handle, index) => {
+            handle.show();
+        });
     }
     //#endregion
     unedit() {

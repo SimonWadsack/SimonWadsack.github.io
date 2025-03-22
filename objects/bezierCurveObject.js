@@ -10,6 +10,7 @@ class BezierCurveObject extends VisualObject {
     radius;
     radialSegments;
     curve;
+    editControlPointActive;
     connectionVisual;
     deCasteljauActive;
     deCasteljauT;
@@ -27,32 +28,51 @@ class BezierCurveObject extends VisualObject {
         this.geometry = new THREE.TubeGeometry(this.curve, segments, this.radius, this.radialSegments, false);
         this.material = new THREE.MeshBasicMaterial({ color: this.color });
         this.material.side = THREE.DoubleSide;
-        this.setMesh(new THREE.Mesh(this.geometry, this.material));
+        const mesh = new THREE.Mesh(this.geometry, this.material);
+        this.setMesh(mesh);
         const collisionGeometry = new THREE.TubeGeometry(this.curve, segments, this.radius * 10, this.radialSegments, false);
-        this.deCasteljauCollisionMesh = new THREE.Mesh(collisionGeometry);
-        this.connectionVisual = null;
+        const collisionMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, visible: false });
+        this.deCasteljauCollisionMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
+        mesh.add(this.deCasteljauCollisionMesh);
+        //Editing
+        this.editControlPointActive = false;
+        for (let i = 0; i < this.controlPoints.length; i++) {
+            this.createEditHandle(i);
+            this.setEditHandlePosition(i, this.controlPoints[i]);
+        }
+        const visualGeometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
+        const visualMaterial = new THREE.LineBasicMaterial({ color: getSelectedColor() });
+        this.connectionVisual = new THREE.Line(visualGeometry, visualMaterial);
+        this.connectionVisual.castShadow = true;
+        mesh.add(this.connectionVisual);
+        this.hideEditHandles();
+        // De Casteljau
         this.deCasteljauActive = false;
         this.deCasteljauT = 0.5;
         this.deCasteljauVisuals = [];
     }
     //#region Editing
-    edit() {
-        if (!this.checkMesh("bezierCurveObject:edit"))
-            return () => { console.error("bezierCurveObject:edit failed"); };
-        for (let i = 0; i < this.controlPoints.length; i++) {
-            this.createEditHandle(i);
-            this.setEditHandlePosition(i, this.controlPoints[i]);
+    enableEditControlPoint() {
+        this.editControlPointActive = true;
+        this.showEditHandles();
+        if (!this.checkMesh("bezierCurveObject:enableEditControlPoint")) {
+            console.error("bezierCurveObject:enableEditControlPoint: Mesh is null!");
+            return;
         }
-        const geometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
-        const material = new THREE.LineBasicMaterial({ color: getSelectedColor() });
-        const line = new THREE.Line(geometry, material);
-        line.castShadow = true;
-        this.connectionVisual = line;
-        this.mesh.add(line);
+        this.mesh.add(this.connectionVisual);
+    }
+    disableEditControlPoint() {
+        this.editControlPointActive = false;
+        this.unedit();
+    }
+    getEditControlPointActive() {
+        return this.editControlPointActive;
+    }
+    edit() {
         return this.editUpdate.bind(this);
     }
     editUpdate() {
-        if (this.connectionVisual === null)
+        if (!this.editControlPointActive)
             return;
         for (let i = 0; i < this.controlPoints.length; i++) {
             const handlePosition = this.getEditHandlePosition(i);
@@ -63,13 +83,10 @@ class BezierCurveObject extends VisualObject {
         }
     }
     unedit() {
+        this.hideEditHandles();
         if (!this.checkMesh("bezierCurveObject:unedit"))
             return;
-        if (this.connectionVisual === null)
-            return;
-        this.removeEditHandles();
         this.mesh.remove(this.connectionVisual);
-        this.connectionVisual = null;
     }
     //#endregion
     //#region DeCasteljau
@@ -192,12 +209,23 @@ class BezierCurveObject extends VisualObject {
     }
     //#endregion
     //#region Control Points
-    addControlPoint(point) {
-        this.controlPoints.push(point);
+    addControlPoint(point, front = false) {
+        if (front)
+            this.controlPoints.unshift(point);
+        else
+            this.controlPoints.push(point);
         this.recompute();
         this.updateConnectionVisual();
-        this.createEditHandle(this.controlPoints.length - 1);
-        this.setEditHandlePosition(this.controlPoints.length - 1, point);
+        if (front) {
+            this.createEditHandle(this.controlPoints.length - 1);
+            for (let i = 0; i < this.controlPoints.length; i++) {
+                this.setEditHandlePosition(i, this.controlPoints[i]);
+            }
+        }
+        else {
+            this.createEditHandle(this.controlPoints.length - 1);
+            this.setEditHandlePosition(this.controlPoints.length - 1, point);
+        }
     }
     removeControlPoint(index) {
         if (this.controlPoints.length < 3)

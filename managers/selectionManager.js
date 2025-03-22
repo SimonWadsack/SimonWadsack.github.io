@@ -1,15 +1,17 @@
 import * as THREE from 'three';
 import { EventBus } from '../core/events.js';
-import { TransformControls } from 'three/examples/jsm/Addons.js';
+import { VisualObject } from '../objects/visualObject.js';
 import { App } from '../core/app.js';
+import { EditHandle } from '../objects/editHandle.js';
 
 class SelectionManager {
     raycaster;
     mouse;
     mouseDown;
     hoveredObject;
+    hoveredEditHandle;
     selectedObject;
-    dragging;
+    selectedEditHandle;
     active;
     canEdit;
     constructor() {
@@ -17,8 +19,9 @@ class SelectionManager {
         this.mouse = new THREE.Vector2();
         this.mouseDown = new THREE.Vector2();
         this.hoveredObject = null;
+        this.hoveredEditHandle = null;
         this.selectedObject = null;
-        this.dragging = false;
+        this.selectedEditHandle = null;
         this.active = false;
         this.canEdit = true;
         const domElement = App.getRenderer().domElement;
@@ -27,15 +30,6 @@ class SelectionManager {
         domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
         domElement.addEventListener('mouseenter', () => this.active = true);
         domElement.addEventListener('mouseleave', () => this.active = false);
-        const transformControls = new TransformControls(App.getCamera(), domElement);
-        transformControls.setTranslationSnap(0.01);
-        transformControls.addEventListener('dragging-changed', (event) => {
-            App.getOrbitControls().enabled = !event.value;
-            this.dragging = event.value;
-        });
-        App.getScene().add(transformControls.getHelper());
-        transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
-        App.setTransformControls(transformControls);
     }
     isActive() {
         return this.active;
@@ -56,11 +50,22 @@ class SelectionManager {
         this.mouseDown.y = event.clientY;
     }
     onMouseUp(event) {
+        var deselectedEditHandle = false;
+        if (this.hoveredEditHandle) {
+            this.selectEditHandle(this.hoveredEditHandle);
+            return;
+        }
+        else {
+            if (this.selectedEditHandle && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
+                this.resetSelectedEditHandle();
+                deselectedEditHandle = true;
+            }
+        }
         if (this.hoveredObject) { //clicked on hovered object
             this.select(this.hoveredObject);
         }
         else { //we clicked somehwere else and did not move the mouse
-            if (this.selectedObject && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
+            if (!deselectedEditHandle && this.selectedObject && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
                 this.resetSelected();
             }
         }
@@ -76,16 +81,25 @@ class SelectionManager {
             const mesh = this.findMesh(intersects); //find the mesh
             if (mesh == null) { //no mesh found, so reset the hovered object
                 this.resetHovered();
+                this.resetHoveredEditHandle();
                 return;
             }
-            //if the mesh is not associated with a visual object it must be editHandle or something else
-            if (!objectManager.isVisualObject(mesh)) {
-                this.resetHovered();
-                if (objectManager.isEditHandle(mesh) && !this.dragging && this.canEdit) { //is the object editHandle and we are not moving the orbit controls
-                    //make the object moveable
-                    App.getTransformControls().attach(mesh);
+            if (objectManager.isEditHandle(mesh)) { //is the mesh an edit handle?
+                if (!this.canEdit)
+                    return;
+                const editHandle = objectManager.getEditHandleByMesh(mesh); //get the edit handle from the object manager
+                if (editHandle == null) {
+                    this.resetHoveredEditHandle();
+                    return;
                 }
+                else if (this.selectedEditHandle && this.selectedEditHandle === editHandle) { // is the edit handle the selected edit handle?
+                    return;
+                }
+                this.hoverEditHandle(editHandle);
                 return;
+            }
+            else {
+                this.resetHoveredEditHandle();
             }
             const object = objectManager.getVisualObjectByMesh(mesh); //get the visual object from the object manager
             //if no object was found (only not selectable objects were found), reset the hovered object
@@ -93,7 +107,7 @@ class SelectionManager {
                 this.resetHovered();
                 return;
             }
-            else if (objectManager.selectable(mesh) && !this.dragging) { //we found a selectable object and we are not moving the orbit controls
+            else if (objectManager.selectable(mesh) && !App.isDragging()) { //we found a selectable object and we are not moving the orbit controls
                 if (this.selectedObject && this.selectedObject === object) { // is the object the selected object?
                     return;
                 }
@@ -105,19 +119,26 @@ class SelectionManager {
         }
         else { //no, so reset the hovered object
             this.resetHovered();
+            this.resetHoveredEditHandle();
         }
     }
+    //#region Editing
     enableEditing() {
         this.canEdit = true;
     }
     disableEditing() {
         this.canEdit = false;
-        App.getTransformControls().detach();
+        this.resetSelectedEditHandle();
     }
+    //#endregion
     hover(object) {
         App.getHierarchy().viewportHover(object.getUUID());
         this.doHover(object);
         this.showTooltip(object);
+    }
+    hoverEditHandle(editHandle) {
+        this.doHoverEditHandle(editHandle);
+        this.showTooltip(editHandle);
     }
     doHover(object) {
         if (this.hoveredObject && this.hoveredObject !== object) {
@@ -126,9 +147,20 @@ class SelectionManager {
         this.hoveredObject = object;
         this.hoveredObject.highlight();
     }
+    doHoverEditHandle(editHandle) {
+        if (this.hoveredEditHandle && this.hoveredEditHandle !== editHandle) {
+            this.hoveredEditHandle.resetHighlight();
+        }
+        this.hoveredEditHandle = editHandle;
+        this.hoveredEditHandle.highlight();
+    }
     resetHovered() {
         App.getHierarchy().viewportDehover();
         this.doResetHovered();
+        this.hideTooltip();
+    }
+    resetHoveredEditHandle() {
+        this.doResetHoveredEditHandle();
         this.hideTooltip();
     }
     doResetHovered() {
@@ -137,9 +169,18 @@ class SelectionManager {
             this.hoveredObject = null;
         }
     }
+    doResetHoveredEditHandle() {
+        if (this.hoveredEditHandle) {
+            this.hoveredEditHandle.resetHighlight();
+            this.hoveredEditHandle = null;
+        }
+    }
     select(object) {
         App.getHierarchy().viewportSelect(object.getUUID());
         this.doSelect(object);
+    }
+    selectEditHandle(editHandle) {
+        this.doSelectEditHandle(editHandle);
     }
     doSelect(object) {
         if (this.selectedObject && this.selectedObject !== object) {
@@ -150,9 +191,22 @@ class SelectionManager {
         this.selectedObject.select();
         EventBus.notify('objectSelected', "viewport" /* EEnv.VIEWPORT */, this.selectedObject);
     }
+    doSelectEditHandle(editHandle) {
+        if (this.selectedEditHandle && this.selectedEditHandle !== editHandle) {
+            this.doResetSelectedEditHandle();
+        }
+        this.hoveredEditHandle = null;
+        this.selectedEditHandle = editHandle;
+        this.selectedEditHandle.select();
+        App.getTransformControls().attach(editHandle.getMesh());
+        EventBus.notify('editHandleSelected', "viewport" /* EEnv.VIEWPORT */, this.selectedEditHandle);
+    }
     resetSelected() {
         App.getHierarchy().viewportDeselect();
         this.doResetSelected();
+    }
+    resetSelectedEditHandle() {
+        this.doResetSelectedEditHandle();
     }
     doResetSelected() {
         if (this.selectedObject) {
@@ -162,19 +216,36 @@ class SelectionManager {
             EventBus.notify('objectUnselected', "all" /* EEnv.ALL */);
         }
     }
+    doResetSelectedEditHandle() {
+        if (this.selectedEditHandle) {
+            this.selectedEditHandle.resetSelect();
+            this.selectedEditHandle = null;
+            App.getTransformControls().detach();
+            EventBus.notify('editHandleUnselected', "all" /* EEnv.ALL */);
+        }
+    }
+    //#region Tooltip
     showTooltip(object) {
-        App.getTooltip().innerHTML = "<b>" + object.getName() + "</b></br><i>Type:</i> " + object.getType();
-        App.getTooltip().style.display = 'block';
+        if (object instanceof VisualObject) {
+            App.getTooltip().innerHTML = "<b>" + object.getName() + "</b></br><i>Type:</i> " + object.getType();
+            App.getTooltip().style.display = 'block';
+        }
+        else if (object instanceof EditHandle) {
+            App.getTooltip().innerHTML = "<b>Control Point - " + object.getIndex() + "</b></br><i>Object:</i> " + object.getParentObject().getName();
+            App.getTooltip().style.display = 'block';
+        }
     }
     hideTooltip() {
         App.getTooltip().style.display = 'none';
     }
+    //#endregion
+    //#region Private methods
     //find the first selectable object in the list of intersects
     findMesh(intersects) {
         for (const intersect of intersects) {
             if (!(intersect.object instanceof THREE.Mesh))
                 continue;
-            if (App.getObjectManager().selectable(intersect.object) || App.getObjectManager().isEditHandle(intersect.object)) { //selectable and isEditHandle
+            if (App.getObjectManager().selectable(intersect.object) || App.getObjectManager().isEditHandle(intersect.object)) { //selectable or isEditHandle
                 return intersect.object;
             }
         }
