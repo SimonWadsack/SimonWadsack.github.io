@@ -3,39 +3,47 @@ import { VisualObject } from './visualObject.js';
 import { BezierCurve } from '../utils/curves/bezierCurve.js';
 import { getSelectedColor, getColorFromPalette, getHighlightColor } from '../core/vars.js';
 import { lerp3D, lerp3DMesh } from '../utils/math.js';
+import { App } from '../core/app.js';
 
+var BezierCurveObjectMode;
+(function (BezierCurveObjectMode) {
+    BezierCurveObjectMode[BezierCurveObjectMode["OBJECT"] = 0] = "OBJECT";
+    BezierCurveObjectMode[BezierCurveObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
+    BezierCurveObjectMode[BezierCurveObjectMode["DE_CASTELJAU"] = 2] = "DE_CASTELJAU";
+})(BezierCurveObjectMode || (BezierCurveObjectMode = {}));
 class BezierCurveObject extends VisualObject {
+    mode;
     controlPoints;
     segments;
     radius;
     radialSegments;
+    geometry;
+    material;
     curve;
-    editControlPointActive;
     connectionVisual;
-    deCasteljauActive;
     deCasteljauT;
     deCasteljauVisuals;
     deCasteljauCollisionMesh;
-    constructor(name, controlPoints = [new THREE.Vector3(-5, 0, 0), new THREE.Vector3(0, 5, 0), new THREE.Vector3(5, 0, 0)], color = new THREE.Color(0x000000), segments = 100) {
-        super(name);
+    constructor(name, controlPoints = [new THREE.Vector3(-5, 0, 0), new THREE.Vector3(0, 5, 0), new THREE.Vector3(5, 0, 0)], color = new THREE.Color(0x000000), segments = 100, position = new THREE.Vector3(0, 0, 0), mode = BezierCurveObjectMode.CONTROL_POINTS) {
+        const curve = new BezierCurve(controlPoints);
+        const radius = 0.05;
+        const radialSegments = 8;
+        const geometry = new THREE.TubeGeometry(curve, segments, radius, radialSegments, false);
+        const material = new THREE.MeshBasicMaterial({ color: color });
+        material.side = THREE.DoubleSide;
+        const mesh = new THREE.Mesh(geometry, material);
+        super(name, mesh, position);
+        this.curve = curve;
+        this.geometry = geometry;
+        this.material = material;
         this.controlPoints = controlPoints;
         this.color = color;
         this.segments = segments;
-        this.radius = 0.05;
-        this.radialSegments = 8;
+        this.mode = mode;
+        this.radius = radius;
+        this.radialSegments = radialSegments;
         this.type = 'BezierCurveObject';
-        this.curve = new BezierCurve(controlPoints);
-        this.geometry = new THREE.TubeGeometry(this.curve, segments, this.radius, this.radialSegments, false);
-        this.material = new THREE.MeshBasicMaterial({ color: this.color });
-        this.material.side = THREE.DoubleSide;
-        const mesh = new THREE.Mesh(this.geometry, this.material);
-        this.setMesh(mesh);
-        const collisionGeometry = new THREE.TubeGeometry(this.curve, segments, this.radius * 10, this.radialSegments, false);
-        const collisionMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, visible: false });
-        this.deCasteljauCollisionMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
-        mesh.add(this.deCasteljauCollisionMesh);
-        //Editing
-        this.editControlPointActive = false;
+        //Setup control point mode
         for (let i = 0; i < this.controlPoints.length; i++) {
             this.createEditHandle(i);
             this.setEditHandlePosition(i, this.controlPoints[i]);
@@ -45,57 +53,92 @@ class BezierCurveObject extends VisualObject {
         this.connectionVisual = new THREE.Line(visualGeometry, visualMaterial);
         this.connectionVisual.castShadow = true;
         mesh.add(this.connectionVisual);
+        this.connectionVisual.visible = false;
         this.hideEditHandles();
-        // De Casteljau
-        this.deCasteljauActive = false;
+        //Setup De Casteljau mode
         this.deCasteljauT = 0.5;
         this.deCasteljauVisuals = [];
+        const collisionGeometry = new THREE.TubeGeometry(this.curve, segments, this.radius * 10, this.radialSegments, false);
+        const collisionMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, visible: false });
+        this.deCasteljauCollisionMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
+        mesh.add(this.deCasteljauCollisionMesh);
     }
-    //#region Editing
-    enableEditControlPoint() {
-        this.editControlPointActive = true;
-        this.showEditHandles();
-        if (!this.checkMesh("bezierCurveObject:enableEditControlPoint")) {
-            console.error("bezierCurveObject:enableEditControlPoint: Mesh is null!");
-            return;
+    //#region Modes
+    getMode() {
+        return this.mode;
+    }
+    setMode(mode) {
+        this.mode = mode;
+        if (mode === BezierCurveObjectMode.OBJECT) {
+            this.connectionVisual.visible = false;
+            this.hideEditHandles();
+            this.disableDeCasteljau();
         }
-        this.mesh.add(this.connectionVisual);
+        else if (mode === BezierCurveObjectMode.CONTROL_POINTS) {
+            this.connectionVisual.visible = true;
+            this.showEditHandles();
+            this.disableDeCasteljau();
+        }
+        else if (mode === BezierCurveObjectMode.DE_CASTELJAU) {
+            this.connectionVisual.visible = false;
+            this.hideEditHandles();
+            this.enableDeCasteljau();
+        }
     }
-    disableEditControlPoint() {
-        this.editControlPointActive = false;
-        this.unedit();
+    //#endregion
+    //#region JSON
+    toJSON() {
+        return {
+            name: this.name,
+            type: this.type,
+            position: { x: this.mesh.position.x, y: this.mesh.position.y, z: this.mesh.position.z },
+            controlPoints: this.controlPoints.map((point) => ({ x: point.x, y: point.y, z: point.z })),
+            color: this.color.getHex(),
+            segments: this.segments,
+            mode: this.mode,
+            deCasteljauT: this.deCasteljauT
+        };
     }
-    getEditControlPointActive() {
-        return this.editControlPointActive;
+    static fromJSON(json) {
+        const controlPoints = json.controlPoints.map((point) => new THREE.Vector3(point.x, point.y, point.z));
+        const color = new THREE.Color(json.color);
+        const position = new THREE.Vector3(json.position.x, json.position.y, json.position.z);
+        const mode = json.mode;
+        if (BezierCurveObjectMode[mode] === undefined)
+            throw new Error("Invalid BezierCurveObject mode");
+        const object = new BezierCurveObject(json.name, controlPoints, color, json.segments, position, mode);
+        if (mode === BezierCurveObjectMode.DE_CASTELJAU) {
+            object.enableDeCasteljau();
+            object.updateDeCasteljauT(json.deCasteljauT !== undefined ? json.deCasteljauT : 0.5);
+        }
+        return object;
     }
+    //#endregion
+    //#region Editing
     edit() {
         return this.editUpdate.bind(this);
     }
     editUpdate() {
-        if (!this.editControlPointActive)
-            return;
-        for (let i = 0; i < this.controlPoints.length; i++) {
-            const handlePosition = this.getEditHandlePosition(i);
+        if (this.mode === BezierCurveObjectMode.CONTROL_POINTS) {
+            const index = App.getSelectionManager().getSelectedEditHandleIndex();
+            if (index === null)
+                return;
+            const handlePosition = this.getEditHandlePosition(index);
             if (handlePosition === null)
-                continue;
-            this.updateControlPoint(i, handlePosition);
-            this.connectionVisual.geometry.setFromPoints(this.controlPoints);
+                return;
+            this.updateControlPoint(index, handlePosition);
+            this.updateConnectionVisual();
         }
     }
     unedit() {
+        this.connectionVisual.visible = false;
         this.hideEditHandles();
-        if (!this.checkMesh("bezierCurveObject:unedit"))
-            return;
-        this.mesh.remove(this.connectionVisual);
     }
     //#endregion
     //#region DeCasteljau
     enableDeCasteljau() {
-        if (this.deCasteljauActive)
+        if (this.deCasteljauVisuals.length > 0)
             return;
-        if (!this.checkMesh("bezierCurveObject:enableDeCasteljau"))
-            return;
-        this.deCasteljauActive = true;
         const n = this.controlPoints.length;
         var lastPoints = [];
         const cpMeshes = [];
@@ -139,9 +182,6 @@ class BezierCurveObject extends VisualObject {
         }
     }
     disableDeCasteljau() {
-        if (!this.checkMesh("bezierCurveObject:disableDeCasteljau"))
-            return;
-        this.deCasteljauActive = false;
         this.deCasteljauVisuals.forEach((visual) => {
             visual.points.forEach((point) => {
                 this.mesh.remove(point);
@@ -150,15 +190,10 @@ class BezierCurveObject extends VisualObject {
         });
         this.deCasteljauVisuals = [];
     }
-    getDeCasteljauActive() {
-        return this.deCasteljauActive;
-    }
     getDeCasteljauT() {
         return this.deCasteljauT;
     }
     updateDeCasteljauT(t) {
-        if (!this.deCasteljauActive)
-            return;
         this.deCasteljauT = t;
         this.recomputeDeCasteljau();
     }
@@ -166,8 +201,6 @@ class BezierCurveObject extends VisualObject {
         return this.deCasteljauCollisionMesh;
     }
     updateDeCasteljauFromNearestPoint(point) {
-        if (!this.deCasteljauActive)
-            return;
         const points = this.curve.getPoints(500);
         let minDist = Number.MAX_VALUE;
         let minIndex = 0;
@@ -181,6 +214,8 @@ class BezierCurveObject extends VisualObject {
         this.updateDeCasteljauT(minIndex / 500);
     }
     recomputeDeCasteljau() {
+        if (this.mode !== BezierCurveObjectMode.DE_CASTELJAU)
+            return;
         for (let i = 0; i < this.deCasteljauVisuals[0].points.length; i++) {
             this.deCasteljauVisuals[0].points[i].position.set(this.controlPoints[i].x, this.controlPoints[i].y, this.controlPoints[i].z);
         }
@@ -202,8 +237,6 @@ class BezierCurveObject extends VisualObject {
         this.recompute();
     }
     updateColor(color) {
-        if (!this.checkMaterial("bezierCurveObject:updateColor"))
-            return;
         super.setColor(color);
         this.material.color.set(color);
     }
@@ -226,26 +259,43 @@ class BezierCurveObject extends VisualObject {
             this.createEditHandle(this.controlPoints.length - 1);
             this.setEditHandlePosition(this.controlPoints.length - 1, point);
         }
+        if (this.controlPoints.length > 100)
+            this.updateSegments(1000);
+        else if (this.controlPoints.length > 40)
+            this.updateSegments(500);
     }
-    removeControlPoint(index) {
-        if (this.controlPoints.length < 3)
+    removeControlPoint(atFront = false) {
+        if (this.controlPoints.length <= 2)
             return;
-        this.controlPoints.splice(index, 1);
+        if (atFront)
+            this.controlPoints.shift();
+        else
+            this.controlPoints.pop();
         this.recompute();
         this.updateConnectionVisual();
-        if (this.hasEditHandle(index)) {
-            this.removeEditHandle(index);
+        if (atFront) {
+            this.removeEditHandle(this.controlPoints.length);
+            for (let i = 0; i < this.controlPoints.length; i++) {
+                this.setEditHandlePosition(i, this.controlPoints[i]);
+            }
         }
+        else {
+            this.removeEditHandle(this.controlPoints.length);
+        }
+        if (this.controlPoints.length < 40)
+            this.updateSegments(100);
+        else if (this.controlPoints.length < 100)
+            this.updateSegments(500);
     }
     updateControlPoint(index, point) {
         this.controlPoints[index].set(point.x, point.y, point.z);
         this.recompute();
         this.updateConnectionVisual();
+        if (this.mode === BezierCurveObjectMode.DE_CASTELJAU) {
+            this.recomputeDeCasteljau();
+        }
         if (this.hasEditHandle(index)) {
             this.setEditHandlePosition(index, point);
-        }
-        if (this.deCasteljauActive) {
-            this.recomputeDeCasteljau();
         }
     }
     getControlPoint(index) {
@@ -257,26 +307,18 @@ class BezierCurveObject extends VisualObject {
     //#endregion
     //#region Highlight and Select (Override)
     highlight() {
-        if (!this.checkMaterial("highlight"))
-            return;
         this.material.color.set(getHighlightColor());
     }
     resetHighlight() {
         this.resetColor();
     }
     select() {
-        if (!this.checkMaterial("select"))
-            return;
         this.material.color.set(getSelectedColor());
-        if (!this.deCasteljauActive)
-            this.disableDeCasteljau();
     }
     resetSelect() {
         this.resetColor();
     }
     resetColor() {
-        if (!this.checkMaterial("resetColor"))
-            return;
         this.material.color.set(this.color);
     }
     //#endregion
@@ -288,8 +330,6 @@ class BezierCurveObject extends VisualObject {
         this.connectionVisual.geometry = new THREE.BufferGeometry().setFromPoints(this.controlPoints);
     }
     recompute() {
-        if (!this.checkMesh("bezierCurveObject:recompute"))
-            return;
         this.curve.setPoints(this.controlPoints);
         if (this.geometry)
             this.geometry.dispose();

@@ -2,6 +2,7 @@ import { EventBus } from '../core/events.js';
 import { HierarchyMenu } from './hierarchy/hierarchyMenu.js';
 import { BezierCurveObject } from '../objects/bezierCurveObject.js';
 import { App } from '../core/app.js';
+import { getIcon } from '../core/vars.js';
 
 class Hierarchy {
     container;
@@ -36,6 +37,7 @@ class Hierarchy {
         this.tree.addEventListener('sl-selection-change', (event) => this.selectionChanged(event));
         this.container.addEventListener('mouseup', () => this.deselect());
         EventBus.subscribe('objectAdded', "general" /* EEnv.GENERAL */, (object) => this.addObject(object));
+        EventBus.subscribe('objectRemoved', "general" /* EEnv.GENERAL */, (object) => this.removeObject(object));
         EventBus.subscribe('objectChanged', "inspector" /* EEnv.INSPECTOR */, () => this.updateHierarchy());
         EventBus.subscribe('objectNameChanged', "all" /* EEnv.ALL */, () => this.updateHierarchy());
         EventBus.subscribe('inspectorTabChanged', "inspector" /* EEnv.INSPECTOR */, () => this.updateHierarchy());
@@ -61,8 +63,11 @@ class Hierarchy {
         div.style.display = 'flex';
         div.style.alignItems = 'center';
         div.style.gap = '10px';
+        const { name: iconName, lucide: lucide } = getIcon(object.getType());
         const icon = document.createElement('sl-icon');
-        icon.name = 'bezier';
+        icon.name = iconName;
+        if (lucide)
+            icon.library = 'lucide';
         div.appendChild(icon);
         const text = document.createElement('span');
         text.textContent = object.getName();
@@ -79,7 +84,7 @@ class Hierarchy {
         //TODO: build custom hierarchy item for all objects
         //BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD BAD
         if (object instanceof BezierCurveObject) {
-            if (object.getDeCasteljauActive()) {
+            if (object.getMode() === 2) {
                 deCasteljauDiv.style.display = '';
             }
         }
@@ -107,6 +112,7 @@ class Hierarchy {
         if (item) {
             this.tree.removeChild(item);
             this.items.delete(object.getUUID());
+            this.selectedItem = null;
         }
     }
     hovered(uuid) {

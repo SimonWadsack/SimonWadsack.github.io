@@ -41,10 +41,10 @@ function initScene(container) {
     };
     const transformControls = new TransformControls(camera, renderer.domElement);
     transformControls.setTranslationSnap(0.01);
-    transformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
+    transformControls.addEventListener('objectChange', () => EventBus.notify('transformMoved', "viewport" /* EEnv.VIEWPORT */));
     const oTransformControls = new TransformControls(orthographicCamera, renderer.domElement);
     oTransformControls.setTranslationSnap(0.01);
-    oTransformControls.addEventListener('objectChange', () => EventBus.notify('objectChanged', "viewport" /* EEnv.VIEWPORT */));
+    oTransformControls.addEventListener('objectChange', () => EventBus.notify('transformMoved', "viewport" /* EEnv.VIEWPORT */));
     oTransformControls.showY = false;
     //create the ambient light
     const light = new THREE.AmbientLight(0xf0f0f0, 1);
@@ -63,9 +63,10 @@ function initScene(container) {
     dirLight.shadow.camera.bottom = -10;
     scene.add(dirLight);
     window.addEventListener('resize', () => resize(container, camera, orthographicCamera, orthoSize, renderer));
-    window.addEventListener('keyup', (e) => { if (e.key === 'Control') {
+    window.addEventListener('keyup', (e) => { if (e.key === 'd') {
         App.switchDimension();
     } });
+    window.addEventListener('beforeunload', () => App.getIOManager().saveSceneToCache());
     App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls);
 }
 /**

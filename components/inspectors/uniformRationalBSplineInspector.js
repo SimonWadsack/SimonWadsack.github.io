@@ -1,35 +1,37 @@
-import { Color, Vector3, Raycaster, Plane } from 'three';
-import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
-import { GroupControl, TextControl, KeyControl } from '../controls.js';
+import { Color, Vector3, Raycaster, Plane, Vector4 } from 'three';
 import { SliderElement } from '../../lacery/elements/sliderElement.js';
 import { TextElement } from '../../lacery/elements/textElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
+import { GroupControl, TextControl, KeyControl } from '../controls.js';
+import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
+import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { getNewPosition } from '../../core/vars.js';
-import { EventBus } from '../../core/events.js';
-import { LabelElement } from '../../lacery/elements/labelElement.js';
 
-class BezierCurveInspector extends ObjectInspector {
+class UniformRationalBSplineInspector extends ObjectInspector {
     constructor(lace) {
-        const modes = [new ObjectMode(), new ControlPointMode(), new DeCasteljauMode()];
-        super("Bezier Curve", lace, modes);
+        const modes = [new ObjectMode(), new ControlPointMode()];
+        super("Uniform Rational B-Spline", lace, modes);
     }
 }
 //#region Object Mode
 class ObjectMode extends ObjectInspectorMode {
     params;
+    degreeSlider;
     constructor() {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), color: new Color(0x000000) };
+        this.params = { name: '', position: new Vector3(), degree: 2, color: new Color(0x000000) };
+        this.degreeSlider = new SliderElement("Degree", this.params, 'degree', { min: 2, max: 10, step: 1 });
     }
     build(tab) {
         tab.add(new TextElement("", this.params, 'name'));
         tab.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
         tab.add(new ColorElement("Color", this.params, 'color'));
+        tab.add(this.degreeSlider);
     }
     select(object) { }
     deselect() { }
@@ -37,11 +39,14 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.name = object.getName();
         this.params.position.set(object.getPosition().x, object.getPosition().y, object.getPosition().z);
         this.params.color.set(object.getColor());
+        this.params.degree = object.getDegree();
+        this.degreeSlider.setMax(object.getControlPoints().length - 1);
     }
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(this.params.color);
+        object.setDegree(this.params.degree);
     }
 }
 //#endregion
@@ -57,6 +62,7 @@ class ControlPointMode extends ObjectInspectorMode {
         controls.add(new TextControl('<b>Move</b> the selected control point with the transform controls.'));
         controls.add(new KeyControl('E/Insert', 'Insert a new control point at the last selected endpoint.'));
         controls.add(new KeyControl('R/Delete', 'Remove the last control point.'));
+        controls.add(new TextControl('When a control point is selected, <b>scroll</b> to change its weight.'));
         super('waypoints', false, controls);
         this.controlPoints = [];
         this.currentObject = null;
@@ -70,6 +76,12 @@ class ControlPointMode extends ObjectInspectorMode {
             else if (editHandle.getIndex() === this.controlPoints.length - 1) {
                 this.atFront = false;
             }
+            this.currentObject.showWeightEditRing(editHandle.getIndex());
+        });
+        EventBus.subscribe('editHandleUnselected', "all" /* EEnv.ALL */, () => {
+            if (!this.currentObject)
+                return;
+            this.currentObject.hideWeightEditRing();
         });
         App.getInteractionsManager().addKeydowns(['e', 'insert'], (() => {
             if (!this.active)
@@ -111,7 +123,7 @@ class ControlPointMode extends ObjectInspectorMode {
         const curveControlPoints = object.getControlPoints();
         this.controlPoints.length = 0;
         curveControlPoints.forEach((point, index) => {
-            this.controlPoints.push(new BezierCurveControlPointLaceListElement(point));
+            this.controlPoints.push(new UniformRationalBSplineControlPointLaceListElement(point));
         });
         this.laceList.update();
     }
@@ -119,7 +131,9 @@ class ControlPointMode extends ObjectInspectorMode {
     listChanged(index) {
         if (this.currentObject === null)
             return;
-        this.currentObject.updateControlPoint(index, this.controlPoints[index].getPosition());
+        const pos = this.controlPoints[index].getPosition();
+        const point = new Vector4(pos.x, pos.y, pos.z, this.controlPoints[index].getWeight());
+        this.currentObject.updateControlPoint(index, point);
     }
     listAdd() {
         if (this.currentObject === null)
@@ -134,7 +148,8 @@ class ControlPointMode extends ObjectInspectorMode {
             return;
         App.getTransformControls().detach();
         App.getSelectionManager().doResetSelectedEditHandle();
-        this.currentObject.addControlPoint(position, atFront);
+        const point = new Vector4(position.x, position.y, position.z, 1);
+        this.currentObject.addControlPoint(point, atFront);
         this.objectChanged(this.currentObject);
     }
     listRemove() {
@@ -152,73 +167,33 @@ class ControlPointMode extends ObjectInspectorMode {
         this.objectChanged(this.currentObject);
     }
 }
-class BezierCurveControlPointLaceListElement extends LaceListElement {
+class UniformRationalBSplineControlPointLaceListElement extends LaceListElement {
     position;
-    constructor(position) {
+    constructor(point) {
         super();
-        this.position = position;
+        this.position = point;
     }
     setPosition(position) {
-        this.position.set(position.x, position.y, position.z);
+        this.position.set(position.x, position.y, position.z, this.position.w);
     }
     getPosition() {
         const result = new Vector3();
         result.set(this.position.x, this.position.y, this.position.z);
         return result;
     }
+    setWeight(weight) {
+        this.position.set(this.position.x, this.position.y, this.position.z, weight);
+    }
+    getWeight() {
+        const result = this.position.w;
+        return result;
+    }
     getEditor() {
         const positionElement = new Vec3Element("Position", this.position, 'x', 'y', 'z');
-        return [positionElement];
-    }
-}
-//#endregion
-//#region De Casteljau Mode
-class DeCasteljauMode extends ObjectInspectorMode {
-    params;
-    currentObject;
-    slider;
-    constructor() {
-        const controls = new GroupControl();
-        controls.add(new TextControl('<b>Hover</b> over the curve to adjust the t-value.'));
-        super('spline', false, controls, true);
-        this.params = { t: 0 };
-        this.currentObject = null;
-        this.slider = new SliderElement("T", this.params, 't', { min: 0, max: 1, step: 0.01 });
-        window.addEventListener('mousemove', ((event) => {
-            if (!this.active)
-                return;
-            if (App.isOrbiting())
-                return;
-            if (this.currentObject === null)
-                return;
-            const raycaster = new Raycaster();
-            raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
-            const intersection = raycaster.intersectObject(this.currentObject.getCollisionMesh(), false);
-            if (intersection.length > 0) {
-                const curvePoint = intersection[0].point.sub(this.currentObject.getPosition());
-                this.currentObject.updateDeCasteljauFromNearestPoint(curvePoint);
-                this.params.t = this.currentObject.getDeCasteljauT();
-                this.slider.update();
-            }
-        }).bind(this));
-    }
-    build(tab) {
-        tab.add(new LabelElement("De-Casteljau Visualization"));
-        tab.add(this.slider);
-    }
-    select(object) {
-        this.currentObject = object;
-    }
-    deselect() {
-        this.currentObject = null;
-    }
-    objectChanged(object) {
-        this.params.t = object.getDeCasteljauT();
-    }
-    inspectorChanged(object) {
-        object.updateDeCasteljauT(this.params.t);
+        const weightElement = new SliderElement("Weight", this.position, 'w', { min: 1, max: 10, step: 0.5 });
+        return [positionElement, weightElement];
     }
 }
 //#endregion
 
-export { BezierCurveInspector };
+export { UniformRationalBSplineInspector };

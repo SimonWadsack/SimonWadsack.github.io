@@ -1,3 +1,5 @@
+import { EventBus } from './events.js';
+
 class App {
     static scene;
     static pCamera;
@@ -16,11 +18,18 @@ class App {
     static selectionManager;
     static editManager;
     static effectManager;
+    static ioManager;
+    static interactionsManager;
     static inspector;
     static hierarchy;
+    static toolbar;
+    static controls;
     static isOrbitingBool = false;
     static isDraggingBool = false;
     static is2D = false;
+    static dimension2D() {
+        return this.is2D;
+    }
     static switchDimension() {
         if (this.is2D) {
             this.is2D = false;
@@ -36,6 +45,7 @@ class App {
         }
         App.getEffectManager().setupRenderPass();
         App.getSelectionManager().doResetSelectedEditHandle();
+        EventBus.notify('dimensionSwitched', "all" /* EEnv.ALL */, this.is2D);
     }
     static getScene() {
         return this.scene;
@@ -48,6 +58,25 @@ class App {
     }
     static getOrbitControls() {
         return this.is2D ? this.oOrbitControls : this.orbitControls;
+    }
+    //TODO - Add a list of callbacks to call when the orbit controls change
+    static onOrbitControlsChange(callback) {
+        this.orbitControls.addEventListener('change', () => {
+            if (!this.is2D)
+                callback();
+        });
+        this.oOrbitControls.addEventListener('change', () => {
+            if (this.is2D)
+                callback();
+        });
+    }
+    static noScroll() {
+        this.orbitControls.enableZoom = false;
+        this.oOrbitControls.enableZoom = false;
+    }
+    static scroll() {
+        this.orbitControls.enableZoom = true;
+        this.oOrbitControls.enableZoom = true;
     }
     static getTransformControls() {
         return this.is2D ? this.oTransformControls : this.transformControls;
@@ -128,6 +157,18 @@ class App {
     static setEffectManager(effectManager) {
         this.effectManager = effectManager;
     }
+    static getIOManager() {
+        return this.ioManager;
+    }
+    static setIOManager(ioManager) {
+        this.ioManager = ioManager;
+    }
+    static getInteractionsManager() {
+        return this.interactionsManager;
+    }
+    static setInteractionsManager(interactionsManager) {
+        this.interactionsManager = interactionsManager;
+    }
     static getInspector() {
         return this.inspector;
     }
@@ -139,6 +180,18 @@ class App {
     }
     static setHierarchy(hierarchy) {
         this.hierarchy = hierarchy;
+    }
+    static getToolbar() {
+        return this.toolbar;
+    }
+    static setToolbar(toolbar) {
+        this.toolbar = toolbar;
+    }
+    static getControls() {
+        return this.controls;
+    }
+    static setControls(controls) {
+        this.controls = controls;
     }
     static isOrbiting() {
         return this.isOrbitingBool;

@@ -8,6 +8,10 @@ import { Hierarchy } from './components/hierarchy.js';
 import { App } from './core/app.js';
 import { EffectManager } from './managers/effectManager.js';
 import { registerIconLibrary } from '@shoelace-style/shoelace';
+import { IOManager } from './managers/ioManager.js';
+import { Toolbar } from './components/toolbar.js';
+import { InteractionsManager } from './managers/interactionsManager.js';
+import { Controls } from './components/controls.js';
 
 function init() {
     registerIconLibrary('lucide', {
@@ -35,10 +39,19 @@ function init() {
     App.setEditManager(editManager);
     const effectManager = new EffectManager();
     App.setEffectManager(effectManager);
+    const ioManager = new IOManager();
+    App.setIOManager(ioManager);
+    const interactionsManager = new InteractionsManager();
+    App.setInteractionsManager(interactionsManager);
+    const controls = new Controls(viewportElement);
+    App.setControls(controls);
     const hierarchy = new Hierarchy(hierarchyElement);
     App.setHierarchy(hierarchy);
     const inspector = new Inspector(inspectorElement);
     App.setInspector(inspector);
+    const toolbar = new Toolbar(viewportElement);
+    App.setToolbar(toolbar);
+    App.getIOManager().loadSceneFromCache();
     render();
 }
 function render() {

@@ -26,5 +26,8 @@ function lerp3DMesh(a, b, t) {
 function lerp(a, b, t) {
     return a + (b - a) * t;
 }
+function remap(value, low1, high1, low2, high2) {
+    return low2 + (value - low1) * (high2 - low2) / (high1 - low1);
+}
 
-export { binomialCoefficient, lerp, lerp3D, lerp3DMesh };
+export { binomialCoefficient, lerp, lerp3D, lerp3DMesh, remap };

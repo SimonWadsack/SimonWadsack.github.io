@@ -1,20 +1,18 @@
 import { Color, Vector3, Raycaster, Plane } from 'three';
-import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
-import { GroupControl, TextControl, KeyControl } from '../controls.js';
-import { SliderElement } from '../../lacery/elements/sliderElement.js';
 import { TextElement } from '../../lacery/elements/textElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
+import { GroupControl, TextControl, KeyControl } from '../controls.js';
+import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
+import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { getNewPosition } from '../../core/vars.js';
-import { EventBus } from '../../core/events.js';
-import { LabelElement } from '../../lacery/elements/labelElement.js';
 
-class BezierCurveInspector extends ObjectInspector {
+class LinearCurveInspector extends ObjectInspector {
     constructor(lace) {
-        const modes = [new ObjectMode(), new ControlPointMode(), new DeCasteljauMode()];
-        super("Bezier Curve", lace, modes);
+        const modes = [new ObjectMode(), new ControlPointMode()];
+        super("Linear Curve", lace, modes);
     }
 }
 //#region Object Mode
@@ -111,7 +109,7 @@ class ControlPointMode extends ObjectInspectorMode {
         const curveControlPoints = object.getControlPoints();
         this.controlPoints.length = 0;
         curveControlPoints.forEach((point, index) => {
-            this.controlPoints.push(new BezierCurveControlPointLaceListElement(point));
+            this.controlPoints.push(new LinearCurveControlPointLaceListElement(point));
         });
         this.laceList.update();
     }
@@ -152,7 +150,7 @@ class ControlPointMode extends ObjectInspectorMode {
         this.objectChanged(this.currentObject);
     }
 }
-class BezierCurveControlPointLaceListElement extends LaceListElement {
+class LinearCurveControlPointLaceListElement extends LaceListElement {
     position;
     constructor(position) {
         super();
@@ -172,53 +170,5 @@ class BezierCurveControlPointLaceListElement extends LaceListElement {
     }
 }
 //#endregion
-//#region De Casteljau Mode
-class DeCasteljauMode extends ObjectInspectorMode {
-    params;
-    currentObject;
-    slider;
-    constructor() {
-        const controls = new GroupControl();
-        controls.add(new TextControl('<b>Hover</b> over the curve to adjust the t-value.'));
-        super('spline', false, controls, true);
-        this.params = { t: 0 };
-        this.currentObject = null;
-        this.slider = new SliderElement("T", this.params, 't', { min: 0, max: 1, step: 0.01 });
-        window.addEventListener('mousemove', ((event) => {
-            if (!this.active)
-                return;
-            if (App.isOrbiting())
-                return;
-            if (this.currentObject === null)
-                return;
-            const raycaster = new Raycaster();
-            raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
-            const intersection = raycaster.intersectObject(this.currentObject.getCollisionMesh(), false);
-            if (intersection.length > 0) {
-                const curvePoint = intersection[0].point.sub(this.currentObject.getPosition());
-                this.currentObject.updateDeCasteljauFromNearestPoint(curvePoint);
-                this.params.t = this.currentObject.getDeCasteljauT();
-                this.slider.update();
-            }
-        }).bind(this));
-    }
-    build(tab) {
-        tab.add(new LabelElement("De-Casteljau Visualization"));
-        tab.add(this.slider);
-    }
-    select(object) {
-        this.currentObject = object;
-    }
-    deselect() {
-        this.currentObject = null;
-    }
-    objectChanged(object) {
-        this.params.t = object.getDeCasteljauT();
-    }
-    inspectorChanged(object) {
-        object.updateDeCasteljauT(this.params.t);
-    }
-}
-//#endregion
 
-export { BezierCurveInspector };
+export { LinearCurveInspector };

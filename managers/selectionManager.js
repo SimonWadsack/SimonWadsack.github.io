@@ -37,6 +37,12 @@ class SelectionManager {
     getMouse() {
         return this.mouse;
     }
+    getSelectedEditHandleIndex() {
+        if (this.selectedEditHandle) {
+            return this.selectedEditHandle.getIndex();
+        }
+        return null;
+    }
     onMouseMove(event) {
         const domElement = App.getRenderer().domElement;
         this.mouse.x = (event.clientX / domElement.clientWidth) * 2 - 1;
@@ -231,7 +237,7 @@ class SelectionManager {
             App.getTooltip().style.display = 'block';
         }
         else if (object instanceof EditHandle) {
-            App.getTooltip().innerHTML = "<b>Control Point - " + object.getIndex() + "</b></br><i>Object:</i> " + object.getParentObject().getName();
+            App.getTooltip().innerHTML = "<b>Control Point - " + (object.getIndex() + 1) + "</b></br><i>Object:</i> " + object.getParentObject().getName();
             App.getTooltip().style.display = 'block';
         }
     }

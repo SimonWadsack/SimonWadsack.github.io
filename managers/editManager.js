@@ -9,6 +9,7 @@ class EditManager {
         EventBus.subscribe('objectSelected', "all" /* EEnv.ALL */, (object) => this.selectObject(object));
         EventBus.subscribe('objectUnselected', "all" /* EEnv.ALL */, () => this.unselectObject());
         EventBus.subscribe('objectChanged', "all" /* EEnv.ALL */, () => this.update());
+        EventBus.subscribe('transformMoved', "viewport" /* EEnv.VIEWPORT */, () => this.update());
     }
     update() {
         if (this.updateCallback) {

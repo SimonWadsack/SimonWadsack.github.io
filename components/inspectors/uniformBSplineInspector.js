@@ -1,35 +1,37 @@
 import { Color, Vector3, Raycaster, Plane } from 'three';
-import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
-import { GroupControl, TextControl, KeyControl } from '../controls.js';
 import { SliderElement } from '../../lacery/elements/sliderElement.js';
 import { TextElement } from '../../lacery/elements/textElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
+import { GroupControl, TextControl, KeyControl } from '../controls.js';
+import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
+import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { getNewPosition } from '../../core/vars.js';
-import { EventBus } from '../../core/events.js';
-import { LabelElement } from '../../lacery/elements/labelElement.js';
 
-class BezierCurveInspector extends ObjectInspector {
+class UniformBSplineInspector extends ObjectInspector {
     constructor(lace) {
-        const modes = [new ObjectMode(), new ControlPointMode(), new DeCasteljauMode()];
-        super("Bezier Curve", lace, modes);
+        const modes = [new ObjectMode(), new ControlPointMode()];
+        super("Uniform B-Spline", lace, modes);
     }
 }
 //#region Object Mode
 class ObjectMode extends ObjectInspectorMode {
     params;
+    degreeSlider;
     constructor() {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), color: new Color(0x000000) };
+        this.params = { name: '', position: new Vector3(), degree: 2, color: new Color(0x000000) };
+        this.degreeSlider = new SliderElement("Degree", this.params, 'degree', { min: 2, max: 10, step: 1 });
     }
     build(tab) {
         tab.add(new TextElement("", this.params, 'name'));
         tab.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
         tab.add(new ColorElement("Color", this.params, 'color'));
+        tab.add(this.degreeSlider);
     }
     select(object) { }
     deselect() { }
@@ -37,11 +39,14 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.name = object.getName();
         this.params.position.set(object.getPosition().x, object.getPosition().y, object.getPosition().z);
         this.params.color.set(object.getColor());
+        this.params.degree = object.getDegree();
+        this.degreeSlider.setMax(object.getControlPoints().length - 1);
     }
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(this.params.color);
+        object.setDegree(this.params.degree);
     }
 }
 //#endregion
@@ -111,7 +116,7 @@ class ControlPointMode extends ObjectInspectorMode {
         const curveControlPoints = object.getControlPoints();
         this.controlPoints.length = 0;
         curveControlPoints.forEach((point, index) => {
-            this.controlPoints.push(new BezierCurveControlPointLaceListElement(point));
+            this.controlPoints.push(new UniformBSplineControlPointLaceListElement(point));
         });
         this.laceList.update();
     }
@@ -152,7 +157,7 @@ class ControlPointMode extends ObjectInspectorMode {
         this.objectChanged(this.currentObject);
     }
 }
-class BezierCurveControlPointLaceListElement extends LaceListElement {
+class UniformBSplineControlPointLaceListElement extends LaceListElement {
     position;
     constructor(position) {
         super();
@@ -172,53 +177,5 @@ class BezierCurveControlPointLaceListElement extends LaceListElement {
     }
 }
 //#endregion
-//#region De Casteljau Mode
-class DeCasteljauMode extends ObjectInspectorMode {
-    params;
-    currentObject;
-    slider;
-    constructor() {
-        const controls = new GroupControl();
-        controls.add(new TextControl('<b>Hover</b> over the curve to adjust the t-value.'));
-        super('spline', false, controls, true);
-        this.params = { t: 0 };
-        this.currentObject = null;
-        this.slider = new SliderElement("T", this.params, 't', { min: 0, max: 1, step: 0.01 });
-        window.addEventListener('mousemove', ((event) => {
-            if (!this.active)
-                return;
-            if (App.isOrbiting())
-                return;
-            if (this.currentObject === null)
-                return;
-            const raycaster = new Raycaster();
-            raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
-            const intersection = raycaster.intersectObject(this.currentObject.getCollisionMesh(), false);
-            if (intersection.length > 0) {
-                const curvePoint = intersection[0].point.sub(this.currentObject.getPosition());
-                this.currentObject.updateDeCasteljauFromNearestPoint(curvePoint);
-                this.params.t = this.currentObject.getDeCasteljauT();
-                this.slider.update();
-            }
-        }).bind(this));
-    }
-    build(tab) {
-        tab.add(new LabelElement("De-Casteljau Visualization"));
-        tab.add(this.slider);
-    }
-    select(object) {
-        this.currentObject = object;
-    }
-    deselect() {
-        this.currentObject = null;
-    }
-    objectChanged(object) {
-        this.params.t = object.getDeCasteljauT();
-    }
-    inspectorChanged(object) {
-        object.updateDeCasteljauT(this.params.t);
-    }
-}
-//#endregion
 
-export { BezierCurveInspector };
+export { UniformBSplineInspector };

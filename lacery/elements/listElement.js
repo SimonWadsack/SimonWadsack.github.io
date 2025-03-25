@@ -47,18 +47,14 @@ class ListElement extends LaceElement {
         add.variant = 'success';
         add.outline = true;
         add.style.width = '50%';
-        add.addEventListener('click', () => {
-            this.addCallback();
-        });
+        add.onclick = () => this.addCallback();
         const remove = document.createElement('sl-button');
         remove.innerText = "Remove";
         remove.size = "small";
         remove.variant = 'danger';
         remove.outline = true;
         remove.style.width = '50%';
-        remove.addEventListener('click', () => {
-            this.removeCallback();
-        });
+        remove.onclick = () => this.removeCallback();
         buttons.appendChild(add);
         buttons.appendChild(remove);
         this.container.appendChild(document.createElement('br'));
@@ -66,8 +62,8 @@ class ListElement extends LaceElement {
         this.container.appendChild(document.createElement('br'));
     }
     changedIndex(index) {
-        this.changed();
         this.changeCallback(index);
+        this.changed();
     }
     updateIndex(index) {
         this.editorElements[index].forEach(element => element.update());

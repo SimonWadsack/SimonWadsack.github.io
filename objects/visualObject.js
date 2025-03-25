@@ -1,4 +1,4 @@
-import { Color, MathUtils, Vector3 } from 'three';
+import { Color, Vector3, MathUtils } from 'three';
 import { EditHandle } from './editHandle.js';
 import { App } from '../core/app.js';
 
@@ -10,8 +10,6 @@ import { App } from '../core/app.js';
 class VisualObject {
     name;
     mesh;
-    geometry;
-    material;
     uuid;
     type;
     color = new Color(0x000000);
@@ -22,11 +20,11 @@ class VisualObject {
      * @param {string} name The name of the visual object
      * @constructor
      */
-    constructor(name) {
+    constructor(name, mesh, position = new Vector3(0, 0, 0)) {
         this.name = name;
-        this.mesh = null;
-        this.geometry = null;
-        this.material = null;
+        this.mesh = mesh;
+        this.mesh.position.set(position.x, position.y, position.z);
+        this.mesh.castShadow = true;
         this.uuid = MathUtils.generateUUID();
         this.type = 'VisualObject';
         this.editHandles = new Map();
@@ -51,31 +49,18 @@ class VisualObject {
         return this.type;
     }
     getMesh() {
-        if (!this.checkMesh("getMesh"))
-            return null;
         return this.mesh;
     }
-    setMesh(mesh) {
-        this.mesh = mesh;
-        this.mesh.castShadow = true;
-        return true;
-    }
     getPosition() {
-        if (!this.checkMesh("getPosition"))
-            return new Vector3();
         const result = new Vector3();
         result.copy(this.mesh.position);
         return result;
     }
     setPosition(position) {
-        if (!this.checkMesh("setPosition"))
-            return;
         this.mesh.position.set(position.x, position.y, position.z);
     }
     //#region moving
     move(x, y, z) {
-        if (!this.checkMesh("move"))
-            return;
         var position = this.getPosition();
         if (!position)
             return;
@@ -101,8 +86,8 @@ class VisualObject {
         return () => { console.error('VisualObject: Edit not implemented!'); };
     }
     //#region edit handles
-    createEditHandle(index) {
-        const editHandle = new EditHandle(this, index);
+    createEditHandle(index, radius = 0.2) {
+        const editHandle = new EditHandle(this, index, radius);
         this.editHandles.set(index, editHandle);
         App.getObjectManager().addEditHandle(editHandle);
     }
@@ -179,29 +164,6 @@ class VisualObject {
     //#endregion
     unedit() {
         console.warn('VisualObject: Unedit not implemented!');
-    }
-    //#endregion
-    //#region checks
-    checkMesh(origin) {
-        if (this.mesh === null) {
-            console.error('VisualObject: Mesh not set: ', origin);
-            return false;
-        }
-        return true;
-    }
-    checkMaterial(origin) {
-        if (this.material === null) {
-            console.error('VisualObject: Material not set: ', origin);
-            return false;
-        }
-        return true;
-    }
-    checkGeometry(origin) {
-        if (this.geometry === null) {
-            console.error('VisualObject: Geometry not set: ', origin);
-            return false;
-        }
-        return true;
     }
 }
 

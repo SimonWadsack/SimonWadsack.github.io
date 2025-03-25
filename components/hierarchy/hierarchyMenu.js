@@ -1,4 +1,5 @@
 import { App } from '../../core/app.js';
+import { getIcon } from '../../core/vars.js';
 
 class HierarchyMenu {
     selectionChanged;
@@ -46,25 +47,52 @@ class HierarchyMenu {
         const curvesLabel = document.createElement('sl-menu-label');
         curvesLabel.textContent = "Curves";
         menu.appendChild(curvesLabel);
-        const bezierItem = document.createElement('sl-menu-item');
-        bezierItem.classList.add('menu-item');
-        bezierItem.addEventListener('click', () => this.addBezierCurve());
-        const bezierIcon = document.createElement('sl-icon');
-        bezierIcon.name = "bezier";
-        bezierIcon.slot = 'prefix';
-        const bezierText = document.createElement('span');
-        bezierText.textContent = "Bezier Curve";
-        bezierItem.appendChild(bezierIcon);
-        bezierItem.appendChild(bezierText);
-        menu.appendChild(bezierItem);
+        //TODO - manager that holds all objects and their creation functions
+        menu.appendChild(this.addNewObject("Linear Curve", 'LinearCurveObject', this.addLinearCurve.bind(this)));
+        menu.appendChild(this.addNewObject("Bezier Curve", "BezierCurveObject", this.addBezierCurve.bind(this)));
+        menu.appendChild(this.addNewObject("Bezier Spline", "BezierSplineObject", this.addBezierSpline.bind(this)));
+        menu.appendChild(this.addNewObject("Uniform B-Spline", "UniformBSplineObject", this.addUniformBSplineCurve.bind(this)));
+        menu.appendChild(this.addNewObject("Uniform Rational B-Spline", "UniformRationBSplineObject", this.addURBSCurve.bind(this)));
         const surfacesLabel = document.createElement('sl-menu-label');
         surfacesLabel.textContent = "Surfaces";
         menu.appendChild(surfacesLabel);
         div.appendChild(hierarchyMenu);
     }
+    addNewObject(name, type, onclick) {
+        const item = document.createElement('sl-menu-item');
+        item.classList.add('menu-item');
+        item.onclick = onclick;
+        const { name: iconName, lucide: lucide } = getIcon(type);
+        const icon = document.createElement('sl-icon');
+        icon.name = iconName;
+        if (lucide)
+            icon.library = 'lucide';
+        icon.slot = 'prefix';
+        const text = document.createElement('span');
+        text.textContent = name;
+        item.appendChild(icon);
+        item.appendChild(text);
+        return item;
+    }
+    addLinearCurve() {
+        const linearCurve = App.getCreationManager().createBasicLinearCurve();
+        this.selectionChanged(linearCurve.getUUID());
+    }
     addBezierCurve() {
         const bezierCurve = App.getCreationManager().createBasicBezierCurve();
         this.selectionChanged(bezierCurve.getUUID());
+    }
+    addBezierSpline() {
+        const bezierSpline = App.getCreationManager().createBasicBezierSpline();
+        this.selectionChanged(bezierSpline.getUUID());
+    }
+    addUniformBSplineCurve() {
+        const uniformBSplineCurve = App.getCreationManager().createBasicUniformBSpline();
+        this.selectionChanged(uniformBSplineCurve.getUUID());
+    }
+    addURBSCurve() {
+        const urbsCurve = App.getCreationManager().createBasicURBS();
+        this.selectionChanged(urbsCurve.getUUID());
     }
 }
 

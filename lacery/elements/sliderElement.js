@@ -58,8 +58,18 @@ class SliderElement extends LaceElement {
     }
     setSize(size) {
         this.input.size = size;
+        if (size === "small")
+            this.range.classList.add('small');
         this.range.style.setProperty('--thumb-size', size === 'small' ? '15px' : size === 'medium' ? '20px' : '25px');
         this.range.style.setProperty('--track-height', size === 'small' ? '5px' : size === 'medium' ? '6px' : '7px');
+    }
+    setMin(min) {
+        this.range.min = min;
+        this.input.min = min;
+    }
+    setMax(max) {
+        this.range.max = max;
+        this.input.max = max;
     }
 }
 

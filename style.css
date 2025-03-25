@@ -21,6 +21,10 @@ html, body {
     background-color: var(--sl-color-danger-600);
 }
 
+.sl-toast-stack {
+  right: 22% !important;
+}
+
 #inspector{
     background-color: var(--sl-color-neutral-0);
 }
@@ -101,7 +105,41 @@ html, body {
 
 /*#endregion*/
 
+/*#region Toolbar & Controls */
+
+.toolbar{
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.controls{
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.controls sl-details::part(header){
+  font-size: var(--sl-font-size-small);
+}
+
+.controls sl-details::part(content){
+  font-size: var(--sl-font-size-x-small);
+}
+
+/*#endregion*/
+
 /*#region Custom Styles */
+
+.confirm-dialog{
+    font-family: var(--sl-font-sans);
+}
 
 .hierarchy-item:nth-child(odd){
     background-color: var(--sl-color-neutral-200);
@@ -138,6 +176,10 @@ html, body {
 
 .tab-panel::part(base){
     padding-left: 0.5rem;
+}
+
+.small::part(form-control-label){
+  font-size: var(--sl-input-label-font-size-small);
 }
 
 /*#endregion*/

@@ -34,16 +34,6 @@ class BezierCurve extends Curve {
         this.controlPoints = source.controlPoints.map(p => p.clone());
         return this;
     }
-    toJSON() {
-        const data = super.toJSON();
-        data.controlPoints = this.controlPoints.map(p => p.toArray());
-        return data;
-    }
-    fromJSON(data) {
-        super.fromJSON(data);
-        this.controlPoints = data.controlPoints.map(p => new Vector3().fromArray(p));
-        return this;
-    }
 }
 
 export { BezierCurve };

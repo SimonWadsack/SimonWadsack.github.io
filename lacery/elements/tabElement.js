@@ -63,9 +63,18 @@ class TabElement extends LaceElement {
     show(label) {
         this.tabGroup.show(label);
         this.eventFunctions.get(label).onSel();
+        this.activeTab = label;
     }
     getActiveTab() {
         return this.activeTab;
+    }
+    next() {
+        const tabs = this.tabs.map(tab => tab.name);
+        const index = tabs.indexOf(this.activeTab);
+        if (index === tabs.length - 1)
+            this.show(tabs[0]);
+        else
+            this.show(tabs[index + 1]);
     }
     getObj() { return null; }
     getKeys() { return []; }

@@ -85,6 +85,14 @@ class ObjectManager {
         this.meshLookup.delete(mesh);
         EventBus.notify('objectRemoved', "all" /* EEnv.ALL */, visualObject);
     }
+    removeObjects() {
+        this.objects.forEach((object, uuid) => {
+            this.removeObject(uuid);
+        });
+        this.objects.clear();
+        this.meshLookup.clear();
+        this.editHandleLookup.clear();
+    }
     removeEditHandle(editHandle) {
         if (!editHandle) {
             console.error(`removeEditHandle: Edit handle ${editHandle} not found!`);
