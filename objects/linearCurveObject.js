@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 import { VisualObject } from './visualObject.js';
 import { getHighlightColor, getSelectedColor } from '../core/vars.js';
+import { LineGeometry, LineMaterial, Line2 } from 'three/examples/jsm/Addons.js';
 import { App } from '../core/app.js';
-import { LineGeometry } from '../node_modules/three/examples/jsm/lines/LineGeometry.js';
-import { LineMaterial } from '../node_modules/three/examples/jsm/lines/LineMaterial.js';
-import { Line2 } from '../node_modules/three/examples/jsm/lines/Line2.js';
 
 var LinearCurveObjectMode;
 (function (LinearCurveObjectMode) {
