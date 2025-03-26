@@ -74,7 +74,7 @@ class IOManager {
             if (!restored)
                 App.getInteractionsManager().toast('Scene loaded', 'Scene loaded successfully!', 'success');
             else if (data.objects && data.objects.length > 0)
-                App.getInteractionsManager().toast('Scene restored', 'Scene restored successfully!', 'success');
+                App.getInteractionsManager().toast('Last Session restored', 'The Last Session was restored successfully!', 'success');
         }
         catch (e) {
             console.error("Error while loading JSON file: ", e);

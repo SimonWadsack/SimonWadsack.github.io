@@ -68,6 +68,29 @@ function initScene(container) {
     } });
     window.addEventListener('beforeunload', () => App.getIOManager().saveSceneToCache());
     App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls);
+    //add logo
+    const logoDiv = document.createElement('div');
+    logoDiv.style.position = 'absolute';
+    logoDiv.style.bottom = '1rem';
+    logoDiv.style.right = '22%';
+    logoDiv.style.display = 'flex';
+    logoDiv.style.flexDirection = 'column';
+    logoDiv.style.alignItems = 'center';
+    logoDiv.style.gap = '0.5rem';
+    const logoETH = document.createElement('img');
+    logoETH.src = '/icons/eth.svg';
+    logoETH.style.width = '5rem';
+    logoETH.style.opacity = '0.6';
+    logoETH.style.cursor = 'pointer';
+    logoETH.onclick = () => window.open('https://inf.ethz.ch/', '_blank');
+    logoDiv.appendChild(logoETH);
+    const logoCGL = document.createElement('img');
+    logoCGL.src = '/icons/cgl.svg';
+    logoCGL.style.width = '10rem';
+    logoCGL.style.cursor = 'pointer';
+    logoCGL.onclick = () => window.open('https://www.cgl.ethz.ch/', '_blank');
+    logoDiv.appendChild(logoCGL);
+    container.appendChild(logoDiv);
 }
 /**
  * @param {Scene} scene The Three.js scene
