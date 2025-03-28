@@ -90,6 +90,13 @@ function initScene(container) {
     logoCGL.style.cursor = 'pointer';
     logoCGL.onclick = () => window.open('https://www.cgl.ethz.ch/', '_blank');
     logoDiv.appendChild(logoCGL);
+    const madeBy = document.createElement('p');
+    madeBy.innerText = 'Made by Simon Wadsack';
+    madeBy.style.fontSize = '0.8rem';
+    madeBy.style.color = 'var(--sl-color-neutral-400)';
+    madeBy.style.cursor = 'pointer';
+    madeBy.onclick = () => window.open('https://github.com/SimonWadsack/', '_blank');
+    logoDiv.appendChild(madeBy);
     container.appendChild(logoDiv);
 }
 /**
