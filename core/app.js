@@ -38,12 +38,16 @@ class App {
             this.oTransformControls.detach();
             this.orbitControls.enabled = true;
             this.oOrbitControls.enabled = false;
+            this.directionalLight.position.set(10, 25, 0);
+            this.directionalLight.target.position.set(0, 0, 0);
         }
         else {
             this.is2D = true;
             this.transformControls.detach();
             this.orbitControls.enabled = false;
             this.oOrbitControls.enabled = true;
+            this.directionalLight.position.set(0, 100, 0);
+            this.directionalLight.target.position.set(0, 0, 0);
         }
         App.getEffectManager().setupRenderPass();
         App.getSelectionManager().doResetSelectedEditHandle();
