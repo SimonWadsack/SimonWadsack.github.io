@@ -105,6 +105,9 @@ class VisualObjectFactory {
             case 'UniformRationBSplineObject':
                 App.getCreationManager().createJSONURBS(obj);
                 break;
+            case 'BezierPatchObject':
+                App.getCreationManager().createJSONBezierPatch(obj);
+                break;
             default:
                 console.warn(`Unknown object type: ${type}`);
                 break;

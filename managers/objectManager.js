@@ -41,6 +41,8 @@ class ObjectManager {
         return this.objects.get(uuid);
     }
     selectable(mesh) {
+        if (mesh.userData.collision && mesh.userData.object)
+            return true;
         return this.meshLookup.has(mesh);
     }
     isEditHandle(mesh) {
@@ -53,10 +55,14 @@ class ObjectManager {
         return false;
     }
     isVisualObject(mesh) {
+        if (mesh.userData.collision && mesh.userData.object)
+            return true;
         return this.meshLookup.has(mesh);
     }
     getVisualObjectByMesh(mesh) {
         if (!this.meshLookup.has(mesh)) {
+            if (mesh.userData.collision && mesh.userData.object)
+                return mesh.userData.object;
             console.error(`getVisualObjectByMesh: Object with mesh ${mesh} not found!`);
             return null;
         }

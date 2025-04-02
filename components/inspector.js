@@ -10,6 +10,8 @@ import { UniformRationalBSplineObject } from '../objects/uniformRationalBSplineO
 import { UniformRationalBSplineInspector } from './inspectors/uniformRationalBSplineInspector.js';
 import { BezierSplineInspector } from './inspectors/bezierSplineInspector.js';
 import { BezierSplineObject } from '../objects/bezierSplineObject.js';
+import { BezierPatchObject } from '../objects/bezierPatchObject.js';
+import { BezierPatchInspector } from './inspectors/bezierPatchInspector.js';
 
 class Inspector {
     lace;
@@ -24,6 +26,7 @@ class Inspector {
         this.objectInspectors.set('bezierSpline', new BezierSplineInspector(this.lace));
         this.objectInspectors.set('uniformBSplineCurve', new UniformBSplineInspector(this.lace));
         this.objectInspectors.set('urbsCurve', new UniformRationalBSplineInspector(this.lace));
+        this.objectInspectors.set('bezierPatch', new BezierPatchInspector(this.lace));
         EventBus.subscribe('objectSelected', "all" /* EEnv.ALL */, (object) => this.updateInspector(object));
         EventBus.subscribe('objectUnselected', "all" /* EEnv.ALL */, () => this.updateInspector(null));
         EventBus.subscribe('objectRemoved', "all" /* EEnv.ALL */, () => this.updateInspector(null));
@@ -52,6 +55,9 @@ class Inspector {
         }
         else if (object instanceof UniformRationalBSplineObject) {
             inspector = this.objectInspectors.get('urbsCurve');
+        }
+        else if (object instanceof BezierPatchObject) {
+            inspector = this.objectInspectors.get('bezierPatch');
         }
         if (inspector) {
             inspector.select(object);

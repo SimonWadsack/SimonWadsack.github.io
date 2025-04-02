@@ -47,11 +47,11 @@ function initScene(container) {
     oTransformControls.addEventListener('objectChange', () => EventBus.notify('transformMoved', "viewport" /* EEnv.VIEWPORT */));
     oTransformControls.showY = false;
     //create the ambient light
-    const light = new THREE.AmbientLight(0xf0f0f0, 1);
+    const light = new THREE.AmbientLight(0xf0f0f0, 0.2);
     scene.add(light);
     //create the directional light
-    const dirLight = new THREE.DirectionalLight(0xffffff, 4.5);
-    dirLight.position.set(0, 25, 0);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(10, 25, 0);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
@@ -62,12 +62,13 @@ function initScene(container) {
     dirLight.shadow.camera.top = 10;
     dirLight.shadow.camera.bottom = -10;
     scene.add(dirLight);
+    //scene.add(new THREE.DirectionalLightHelper(dirLight, 5, 0x000000));
     window.addEventListener('resize', () => resize(container, camera, orthographicCamera, orthoSize, renderer));
     window.addEventListener('keyup', (e) => { if (e.key === 'd') {
         App.switchDimension();
     } });
     window.addEventListener('beforeunload', () => App.getIOManager().saveSceneToCache());
-    App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls);
+    App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls, light, dirLight);
     //add logo
     const logoDiv = document.createElement('div');
     logoDiv.style.position = 'absolute';
@@ -86,13 +87,13 @@ function initScene(container) {
     logoDiv.appendChild(logoETH);
     const logoCGL = document.createElement('img');
     logoCGL.src = '/icons/cgl.svg';
-    logoCGL.style.width = '10rem';
+    logoCGL.style.width = '8rem';
     logoCGL.style.cursor = 'pointer';
     logoCGL.onclick = () => window.open('https://www.cgl.ethz.ch/', '_blank');
     logoDiv.appendChild(logoCGL);
     const madeBy = document.createElement('p');
     madeBy.innerText = 'Made by Simon Wadsack';
-    madeBy.style.fontSize = '0.8rem';
+    madeBy.style.fontSize = '0.7rem';
     madeBy.style.color = 'var(--sl-color-neutral-400)';
     madeBy.style.cursor = 'pointer';
     madeBy.onclick = () => window.open('https://github.com/SimonWadsack/', '_blank');

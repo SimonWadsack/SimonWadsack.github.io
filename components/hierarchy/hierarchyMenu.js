@@ -56,6 +56,7 @@ class HierarchyMenu {
         const surfacesLabel = document.createElement('sl-menu-label');
         surfacesLabel.textContent = "Surfaces";
         menu.appendChild(surfacesLabel);
+        menu.appendChild(this.addNewObject("Bezier Patch", "BezierPatchObject", this.addBezierPatch.bind(this)));
         div.appendChild(hierarchyMenu);
     }
     addNewObject(name, type, onclick) {
@@ -93,6 +94,10 @@ class HierarchyMenu {
     addURBSCurve() {
         const urbsCurve = App.getCreationManager().createBasicURBS();
         this.selectionChanged(urbsCurve.getUUID());
+    }
+    addBezierPatch() {
+        const bezierPatch = App.getCreationManager().createBasicBezierPatch();
+        this.selectionChanged(bezierPatch.getUUID());
     }
 }
 

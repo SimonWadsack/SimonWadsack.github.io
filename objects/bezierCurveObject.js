@@ -10,6 +10,7 @@ var BezierCurveObjectMode;
     BezierCurveObjectMode[BezierCurveObjectMode["OBJECT"] = 0] = "OBJECT";
     BezierCurveObjectMode[BezierCurveObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
     BezierCurveObjectMode[BezierCurveObjectMode["DE_CASTELJAU"] = 2] = "DE_CASTELJAU";
+    BezierCurveObjectMode[BezierCurveObjectMode["INFO"] = 3] = "INFO";
 })(BezierCurveObjectMode || (BezierCurveObjectMode = {}));
 class BezierCurveObject extends VisualObject {
     mode;
@@ -83,6 +84,11 @@ class BezierCurveObject extends VisualObject {
             this.connectionVisual.visible = false;
             this.hideEditHandles();
             this.enableDeCasteljau();
+        }
+        else if (mode === BezierCurveObjectMode.INFO) {
+            this.connectionVisual.visible = false;
+            this.hideEditHandles();
+            this.disableDeCasteljau();
         }
     }
     //#endregion

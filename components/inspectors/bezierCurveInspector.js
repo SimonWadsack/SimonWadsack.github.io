@@ -13,7 +13,7 @@ import { LabelElement } from '../../lacery/elements/labelElement.js';
 
 class BezierCurveInspector extends ObjectInspector {
     constructor(lace) {
-        const modes = [new ObjectMode(), new ControlPointMode(), new DeCasteljauMode()];
+        const modes = [new ObjectMode(), new ControlPointMode(), new DeCasteljauMode(), new InfoMode()];
         super("Bezier Curve", lace, modes);
     }
 }
@@ -218,6 +218,25 @@ class DeCasteljauMode extends ObjectInspectorMode {
     inspectorChanged(object) {
         object.updateDeCasteljauT(this.params.t);
     }
+}
+//#endregion
+//#region Info Mode
+class InfoMode extends ObjectInspectorMode {
+    constructor() {
+        const controls = new GroupControl();
+        super('info', false, controls, true);
+    }
+    build(tab) {
+        tab.add(new LabelElement('A <b>Bezier Curve</b> \\( b(t) \\) is a parametric curve widely used in computer graphics, animation, and design for modeling smooth and scalable shapes.<br />' +
+            'It is defined by a <b>set of control points</b> \\( b_i \\), which determine the curve\'s shape.' +
+            'The curve starts at the first control point and ends at the last one, with intermediate control points influencing its curvature.<br/>' +
+            '\\[ b(t) = \\sum_{i=0}^{n} \\binom{n}{i} \\, t^{i} \\, (1-t)^{n-i} \\, b_i \\]' +
+            'Where \\( n \\) is the degree of the curve, \\( b_i \\) are the control points, and \\( t \\) varies from 0 to 1.', { block: true }));
+    }
+    select(object) { }
+    deselect() { }
+    objectChanged(object) { }
+    inspectorChanged(object) { }
 }
 //#endregion
 

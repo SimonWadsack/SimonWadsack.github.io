@@ -57,12 +57,15 @@ class SelectionManager {
     }
     onMouseUp(event) {
         var deselectedEditHandle = false;
+        const moved = Math.abs(this.mouseDown.x - event.clientX) >= 5 || Math.abs(this.mouseDown.y - event.clientY) >= 5;
+        if (moved)
+            return; //we moved the mouse, so do not select anything
         if (this.hoveredEditHandle) {
             this.selectEditHandle(this.hoveredEditHandle);
             return;
         }
         else {
-            if (this.selectedEditHandle && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
+            if (this.selectedEditHandle) {
                 this.resetSelectedEditHandle();
                 deselectedEditHandle = true;
             }
@@ -71,7 +74,7 @@ class SelectionManager {
             this.select(this.hoveredObject);
         }
         else { //we clicked somehwere else and did not move the mouse
-            if (!deselectedEditHandle && this.selectedObject && Math.abs(this.mouseDown.x - event.clientX) < 5 && Math.abs(this.mouseDown.y - event.clientY) < 5) {
+            if (!deselectedEditHandle) {
                 this.resetSelected();
             }
         }
@@ -117,6 +120,7 @@ class SelectionManager {
                 if (this.selectedObject && this.selectedObject === object) { // is the object the selected object?
                     return;
                 }
+                this.resetHovered();
                 this.hover(object);
             }
             else { //not selectable and not editHandle, so reset the hovered object

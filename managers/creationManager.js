@@ -5,6 +5,7 @@ import { LinearCurveObject } from '../objects/linearCurveObject.js';
 import { UniformBSplineObject } from '../objects/uniformBSplineObject.js';
 import { UniformRationalBSplineObject } from '../objects/uniformRationalBSplineObject.js';
 import { BezierSplineObject } from '../objects/bezierSplineObject.js';
+import { BezierPatchObject } from '../objects/bezierPatchObject.js';
 
 class CreationManager {
     constructor() {
@@ -63,6 +64,21 @@ class CreationManager {
         const uniformRationBSplineObject = UniformRationalBSplineObject.fromJSON(json);
         App.getObjectManager().addObject(uniformRationBSplineObject);
         return uniformRationBSplineObject;
+    }
+    createBasicBezierPatch() {
+        const controlPoints = [
+            new Vector3(-5, 0, -5), new Vector3(0, 0, -5), new Vector3(5, 0, -5),
+            new Vector3(-5, 0, 0), new Vector3(0, 5, 0), new Vector3(5, 0, 0),
+            new Vector3(-5, 0, 5), new Vector3(0, 0, 5), new Vector3(5, 0, 5)
+        ];
+        const bezierPatchObject = new BezierPatchObject('Bezier Patch', controlPoints, 3, 3, new Color('#7f8c8d'));
+        App.getObjectManager().addObject(bezierPatchObject);
+        return bezierPatchObject;
+    }
+    createJSONBezierPatch(json) {
+        const bezierPatchObject = BezierPatchObject.fromJSON(json);
+        App.getObjectManager().addObject(bezierPatchObject);
+        return bezierPatchObject;
     }
 }
 

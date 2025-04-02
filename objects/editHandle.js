@@ -12,9 +12,10 @@ class EditHandle {
         this.index = index;
         this.radius = radius;
         const geometry = new SphereGeometry(this.radius);
-        this.material = new MeshBasicMaterial({ color: getEditHandleColor() });
+        this.material = new MeshBasicMaterial({ color: getEditHandleColor(), depthTest: false, transparent: true });
         this.mesh = new Mesh(geometry, this.material);
         this.mesh.castShadow = true;
+        this.mesh.renderOrder = 1001;
     }
     getMesh() {
         return this.mesh;

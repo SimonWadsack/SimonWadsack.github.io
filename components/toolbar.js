@@ -1,4 +1,5 @@
 import { App } from '../core/app.js';
+import { createTeapot } from '../core/vars.js';
 
 class Toolbar {
     closed = false;
@@ -43,6 +44,36 @@ class Toolbar {
         loadItem.appendChild(text2);
         loadItem.value = 'load';
         menu.appendChild(loadItem);
+        const exampleItem = document.createElement('sl-menu-item');
+        const exampleIcon = document.createElement('sl-icon');
+        exampleIcon.library = 'lucide';
+        exampleIcon.name = 'folder-pen';
+        exampleIcon.slot = 'prefix';
+        exampleItem.appendChild(exampleIcon);
+        const exampleText = document.createTextNode('Examples');
+        exampleItem.appendChild(exampleText);
+        const examplesSubmenu = document.createElement('sl-menu');
+        examplesSubmenu.slot = 'submenu';
+        exampleItem.appendChild(examplesSubmenu);
+        const teapotItem = document.createElement('sl-menu-item');
+        const teapotIcon = document.createElement('sl-icon');
+        teapotIcon.name = 'cup-hot';
+        teapotIcon.slot = 'prefix';
+        teapotItem.appendChild(teapotIcon);
+        const teapotText = document.createTextNode('Utah Teapot');
+        teapotItem.appendChild(teapotText);
+        teapotItem.value = 'teapot';
+        examplesSubmenu.appendChild(teapotItem);
+        const teapotColorItem = document.createElement('sl-menu-item');
+        const teapotColorIcon = document.createElement('sl-icon');
+        teapotColorIcon.name = 'cup-hot';
+        teapotColorIcon.slot = 'prefix';
+        teapotColorItem.appendChild(teapotColorIcon);
+        const teapotColorText = document.createTextNode('Utah Teapot (Colorful)');
+        teapotColorItem.appendChild(teapotColorText);
+        teapotColorItem.value = 'teapotColor';
+        examplesSubmenu.appendChild(teapotColorItem);
+        menu.appendChild(exampleItem);
         menu.addEventListener('sl-select', (event) => {
             switch (event.detail.item.value) {
                 case 'save':
@@ -50,6 +81,12 @@ class Toolbar {
                     break;
                 case 'load':
                     this.load();
+                    break;
+                case 'teapot':
+                    this.loadTeapot();
+                    break;
+                case 'teapotColor':
+                    this.loadTeapotColor();
                     break;
                 default:
                     console.warn('Unknown menu item selected!');
@@ -115,6 +152,12 @@ class Toolbar {
     }
     load() {
         App.getIOManager().loadSceneFromFile();
+    }
+    loadTeapot() {
+        createTeapot(2, false);
+    }
+    loadTeapotColor() {
+        createTeapot(2, true);
     }
     resetScene() {
         App.getInteractionsManager().confirm('Reset Scene', 'Are you sure you want to reset the scene?', (value) => {

@@ -10,6 +10,8 @@ class App {
     static oOrbitControls;
     static transformControls;
     static oTransformControls;
+    static ambientLight;
+    static directionalLight;
     static grid;
     static plane;
     static tooltip;
@@ -81,7 +83,13 @@ class App {
     static getTransformControls() {
         return this.is2D ? this.oTransformControls : this.transformControls;
     }
-    static setupScene(scene, pCamera, oCamera, renderer, controls, oControls, transformControls, oTransformControls) {
+    static getAmbientLight() {
+        return this.ambientLight;
+    }
+    static getDirectionalLight() {
+        return this.directionalLight;
+    }
+    static setupScene(scene, pCamera, oCamera, renderer, controls, oControls, transformControls, oTransformControls, ambientLight, directionalLight) {
         this.scene = scene;
         this.pCamera = pCamera;
         this.oCamera = oCamera;
@@ -104,6 +112,8 @@ class App {
             this.isDraggingBool = event.value;
         });
         this.scene.add(this.oTransformControls.getHelper());
+        this.ambientLight = ambientLight;
+        this.directionalLight = directionalLight;
     }
     static getEffectComposer() {
         return this.effectComposer;
