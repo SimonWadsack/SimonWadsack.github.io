@@ -22,6 +22,7 @@ class App {
     static effectManager;
     static ioManager;
     static interactionsManager;
+    static exportManager;
     static inspector;
     static hierarchy;
     static toolbar;
@@ -182,6 +183,12 @@ class App {
     }
     static setInteractionsManager(interactionsManager) {
         this.interactionsManager = interactionsManager;
+    }
+    static getExportManager() {
+        return this.exportManager;
+    }
+    static setExportManager(exportManager) {
+        this.exportManager = exportManager;
     }
     static getInspector() {
         return this.inspector;

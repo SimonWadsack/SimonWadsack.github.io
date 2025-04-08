@@ -12,6 +12,7 @@ import { IOManager } from './managers/ioManager.js';
 import { Toolbar } from './components/toolbar.js';
 import { InteractionsManager } from './managers/interactionsManager.js';
 import { Controls } from './components/controls.js';
+import { ExportManager } from './managers/exportManager.js';
 
 function init() {
     registerIconLibrary('lucide', {
@@ -43,6 +44,8 @@ function init() {
     App.setIOManager(ioManager);
     const interactionsManager = new InteractionsManager();
     App.setInteractionsManager(interactionsManager);
+    const exportManager = new ExportManager();
+    App.setExportManager(exportManager);
     const controls = new Controls(viewportElement);
     App.setControls(controls);
     const hierarchy = new Hierarchy(hierarchyElement);

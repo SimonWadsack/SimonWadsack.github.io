@@ -1,26 +1,27 @@
 import * as THREE from 'three';
 import { DynamicVecGrid } from '../utils/datastructures/dynamicVecGrid.js';
 import { VisualObject } from './visualObject.js';
-import { bezierPatchFragmentShader, bezierPatchVertexShader } from '../utils/shaders/bezierPatchShader.js';
 import { App } from '../core/app.js';
 import { getHighlightColor } from '../core/vars.js';
 import { createGridGeometry } from '../utils/surfaces/gridSurface.js';
-import { bezierPatch } from '../utils/surfaces/bezierPatch.js';
+import { bsplineSurfaceFragmentShader, bsplineSurfaceVertexShader } from '../utils/shaders/bsplineSurfaceShader.js';
+import { uniformBSplineSurface } from '../utils/surfaces/bsplineSurface.js';
 
-var BezierPatchObjectMode;
-(function (BezierPatchObjectMode) {
-    BezierPatchObjectMode[BezierPatchObjectMode["OBJECT"] = 0] = "OBJECT";
-    BezierPatchObjectMode[BezierPatchObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
-})(BezierPatchObjectMode || (BezierPatchObjectMode = {}));
-class BezierPatchObject extends VisualObject {
+var UniformBSplineSurfaceObjectMode;
+(function (UniformBSplineSurfaceObjectMode) {
+    UniformBSplineSurfaceObjectMode[UniformBSplineSurfaceObjectMode["OBJECT"] = 0] = "OBJECT";
+    UniformBSplineSurfaceObjectMode[UniformBSplineSurfaceObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
+})(UniformBSplineSurfaceObjectMode || (UniformBSplineSurfaceObjectMode = {}));
+class UniformBSplineSurfaceObject extends VisualObject {
     mode;
     controlPoints;
+    degree;
     geometry;
     material;
     collisionGeometry;
     collisionMesh;
     radius = 0.1;
-    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = BezierPatchObjectMode.CONTROL_POINTS) {
+    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, degree = 2, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = UniformBSplineSurfaceObjectMode.CONTROL_POINTS) {
         const grid = new DynamicVecGrid(controlPointsWidth, controlPointsHeight);
         for (let i = 0; i < controlPointsWidth; i++) {
             for (let j = 0; j < controlPointsHeight; j++) {
@@ -35,6 +36,7 @@ class BezierPatchObject extends VisualObject {
                 controlPointsWidth: { value: controlPointsWidth },
                 controlPointsHeight: { value: controlPointsHeight },
                 color: { value: color.clone() },
+                degree: { value: degree },
                 lightDirection: { value: App.getDirectionalLight().position.clone() },
                 lightColor: { value: App.getDirectionalLight().color.clone() },
                 lightIntensity: { value: App.getDirectionalLight().intensity },
@@ -43,8 +45,8 @@ class BezierPatchObject extends VisualObject {
                 specularIntensity: { value: 0.3 },
                 specularPower: { value: 16.0 },
             },
-            vertexShader: bezierPatchVertexShader(),
-            fragmentShader: bezierPatchFragmentShader(),
+            vertexShader: bsplineSurfaceVertexShader(),
+            fragmentShader: bsplineSurfaceFragmentShader(),
             side: THREE.DoubleSide,
         });
         const mesh = new THREE.Mesh(geometry, material);
@@ -54,7 +56,8 @@ class BezierPatchObject extends VisualObject {
         this.material = material;
         this.mode = mode;
         this.color = color;
-        this.type = "BezierPatchObject";
+        this.degree = degree;
+        this.type = "UniformBSplineSurfaceObject";
         this.export = this.exportMesh.bind(this);
         //Setup control point mode
         for (let i = 0; i < controlPointsWidth; i++) {
@@ -69,7 +72,7 @@ class BezierPatchObject extends VisualObject {
         //Setup collision geometry
         const width = this.controlPoints.getWidth() + 1;
         const height = this.controlPoints.getHeight() + 1;
-        this.collisionGeometry = createGridGeometry(bezierPatch(this.controlPoints, height, width), height, width);
+        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree), width, height);
         this.collisionMesh = new THREE.Mesh(this.collisionGeometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, visible: false, side: THREE.DoubleSide }));
         this.collisionMesh.userData.collision = true;
         this.collisionMesh.userData.object = this;
@@ -81,11 +84,11 @@ class BezierPatchObject extends VisualObject {
     }
     setMode(mode) {
         this.mode = mode;
-        if (this.mode === BezierPatchObjectMode.OBJECT) {
+        if (this.mode === UniformBSplineSurfaceObjectMode.OBJECT) {
             this.hideEditHandles();
             this.controlPoints.hideVisuals();
         }
-        else if (this.mode === BezierPatchObjectMode.CONTROL_POINTS) {
+        else if (this.mode === UniformBSplineSurfaceObjectMode.CONTROL_POINTS) {
             this.showEditHandles();
             this.controlPoints.showVisuals();
         }
@@ -100,6 +103,7 @@ class BezierPatchObject extends VisualObject {
             controlPoints: this.controlPoints.getPoints().map((point) => ({ x: point.x, y: point.y, z: point.z })),
             controlPointsWidth: this.controlPoints.getWidth(),
             controlPointsHeight: this.controlPoints.getHeight(),
+            degree: this.degree,
             color: this.color.getHex(),
             mode: this.mode,
         };
@@ -109,9 +113,9 @@ class BezierPatchObject extends VisualObject {
         const color = new THREE.Color(json.color);
         const position = new THREE.Vector3(json.position.x, json.position.y, json.position.z);
         const mode = json.mode;
-        if (BezierPatchObjectMode[mode] === undefined)
-            throw new Error("Invalid BezierPatchObjectMode mode");
-        const object = new BezierPatchObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, color, position, mode);
+        if (UniformBSplineSurfaceObjectMode[mode] === undefined)
+            throw new Error("Invalid UniformBSplineSurfaceObjectMode mode");
+        const object = new UniformBSplineSurfaceObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, json.degree, color, position, mode);
         return object;
     }
     //#endregion
@@ -121,7 +125,7 @@ class BezierPatchObject extends VisualObject {
         return this.editUpdate.bind(this);
     }
     editUpdate() {
-        if (this.mode === BezierPatchObjectMode.CONTROL_POINTS) {
+        if (this.mode === UniformBSplineSurfaceObjectMode.CONTROL_POINTS) {
             const index = App.getSelectionManager().getSelectedEditHandleIndex();
             if (index === null)
                 return;
@@ -203,6 +207,7 @@ class BezierPatchObject extends VisualObject {
             startIndex = (this.controlPoints.getWidth() - 1) * this.controlPoints.getHeight();
         }
         else if (col === this.controlPoints.getWidth() - 1) {
+            console.log("Adding column to the right");
             this.controlPoints.addColumn(offset, false);
             newPointsAmount = this.controlPoints.getHeight();
             startIndex = (this.controlPoints.getWidth() - 1) * this.controlPoints.getHeight();
@@ -212,7 +217,7 @@ class BezierPatchObject extends VisualObject {
         }
     }
     removeControlPoint(index) {
-        if (this.controlPoints.getWidth() <= 2 || this.controlPoints.getHeight() <= 2)
+        if (this.controlPoints.getWidth() <= 3 || this.controlPoints.getHeight() <= 3)
             return;
         if (!this.hasEditHandle(index))
             return;
@@ -300,13 +305,13 @@ class BezierPatchObject extends VisualObject {
         this.collisionGeometry.dispose();
         const width = this.controlPoints.getWidth() + 1;
         const height = this.controlPoints.getHeight() + 1;
-        this.collisionGeometry = createGridGeometry(bezierPatch(this.controlPoints, width, height), width, height);
+        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree), width, height);
         this.collisionMesh.geometry = this.collisionGeometry;
     }
     //#endregion
     //#region Export
     exportMesh() {
-        const points = bezierPatch(this.controlPoints, 100, 100);
+        const points = uniformBSplineSurface(this.controlPoints, 100, 100, this.degree);
         const geometry = createGridGeometry(points, 100, 100);
         const material = new THREE.MeshStandardMaterial({ color: this.color, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
@@ -325,4 +330,4 @@ class BezierPatchObject extends VisualObject {
     }
 }
 
-export { BezierPatchObject };
+export { UniformBSplineSurfaceObject };

@@ -12,6 +12,7 @@ class VisualObject {
     mesh;
     uuid;
     type;
+    export;
     color = new Color(0x000000);
     editHandles;
     /**
@@ -27,6 +28,7 @@ class VisualObject {
         this.mesh.castShadow = true;
         this.uuid = MathUtils.generateUUID();
         this.type = 'VisualObject';
+        this.export = null;
         this.editHandles = new Map();
     }
     //#region getters and setters
@@ -47,6 +49,9 @@ class VisualObject {
     }
     getType() {
         return this.type;
+    }
+    getExport() {
+        return this.export;
     }
     getMesh() {
         return this.mesh;

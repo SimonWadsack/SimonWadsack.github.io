@@ -141,6 +141,10 @@ html, body {
     font-family: var(--sl-font-sans);
 }
 
+.export-dialog{
+    font-family: var(--sl-font-sans);
+}
+
 .hierarchy-item:nth-child(odd){
     background-color: var(--sl-color-neutral-200);
 }

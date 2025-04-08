@@ -57,6 +57,8 @@ class HierarchyMenu {
         surfacesLabel.textContent = "Surfaces";
         menu.appendChild(surfacesLabel);
         menu.appendChild(this.addNewObject("Bezier Patch", "BezierPatchObject", this.addBezierPatch.bind(this)));
+        menu.appendChild(this.addNewObject("Uniform B-Spline Surface", "UniformBSplineSurfaceObject", this.addUniformBSplineSurface.bind(this)));
+        menu.appendChild(this.addNewObject("Uniform Rational B-Spline Surface", "UniformRationalBSplineSurfaceObject", this.addUniformRationalBSplineSurface.bind(this)));
         div.appendChild(hierarchyMenu);
     }
     addNewObject(name, type, onclick) {
@@ -98,6 +100,14 @@ class HierarchyMenu {
     addBezierPatch() {
         const bezierPatch = App.getCreationManager().createBasicBezierPatch();
         this.selectionChanged(bezierPatch.getUUID());
+    }
+    addUniformBSplineSurface() {
+        const uniformBSplineSurface = App.getCreationManager().createBasicUniformBSplineSurface();
+        this.selectionChanged(uniformBSplineSurface.getUUID());
+    }
+    addUniformRationalBSplineSurface() {
+        const uniformRationalBSplineSurface = App.getCreationManager().createBasicUniformRationalBSplineSurface();
+        this.selectionChanged(uniformRationalBSplineSurface.getUUID());
     }
 }
 

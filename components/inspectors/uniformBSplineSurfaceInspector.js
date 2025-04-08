@@ -8,10 +8,10 @@ import { LabelElement } from '../../lacery/elements/labelElement.js';
 import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 
-class BezierPatchInspector extends ObjectInspector {
+class UniformBSplineSurfaceInspector extends ObjectInspector {
     constructor(lace) {
         const modes = [new ObjectMode(), new ControlPointMode()];
-        super("Bezier Patch", lace, modes);
+        super("Uniform B-Spline Surface", lace, modes);
     }
 }
 class ObjectMode extends ObjectInspectorMode {
@@ -125,4 +125,4 @@ class ControlPointMode extends ObjectInspectorMode {
     }
 }
 
-export { BezierPatchInspector };
+export { UniformBSplineSurfaceInspector };

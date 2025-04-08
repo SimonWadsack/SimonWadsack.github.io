@@ -8,10 +8,10 @@ import { LabelElement } from '../../lacery/elements/labelElement.js';
 import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 
-class BezierPatchInspector extends ObjectInspector {
+class UniformRationalBSplineSurfaceInspector extends ObjectInspector {
     constructor(lace) {
         const modes = [new ObjectMode(), new ControlPointMode()];
-        super("Bezier Patch", lace, modes);
+        super("Uniform Rational B-Spline Surface", lace, modes);
     }
 }
 class ObjectMode extends ObjectInspectorMode {
@@ -50,17 +50,19 @@ class ControlPointMode extends ObjectInspectorMode {
         controls.add(new TextControl('<b>Once you have selected a control point</b> (at the edges):'));
         controls.add(new KeyControl('E/Insert', 'Insert a new row and/or column at the mouse position.'));
         controls.add(new KeyControl('R/Delete', 'Remove the last row and/or column.'));
-        //controls.add(new KeyControl('E/Insert', 'Insert a new control point at the last selected endpoint.'));
-        //controls.add(new KeyControl('R/Delete', 'Remove the last control point.'));
         super('waypoints', false, controls);
         this.currentObject = null;
         EventBus.subscribe('editHandleSelected', "all" /* EEnv.ALL */, (editHandle) => {
             if (!this.currentObject)
                 return;
             this.lastIndex = editHandle.getIndex();
+            this.currentObject.showWeightEditRing(editHandle.getIndex());
         });
         EventBus.subscribe('editHandleUnselected', "all" /* EEnv.ALL */, () => {
             this.lastIndex = null;
+            if (!this.currentObject)
+                return;
+            this.currentObject.hideWeightEditRing();
         });
         App.getInteractionsManager().addKeydowns(['e', 'insert'], (() => {
             if (!this.active)
@@ -73,7 +75,8 @@ class ControlPointMode extends ObjectInspectorMode {
             raycaster.setFromCamera(App.getSelectionManager().getMouse(), App.getCamera());
             const forward = new Vector3();
             App.getCamera().getWorldDirection(forward);
-            const lastControlPoint = this.currentObject.getControlPoint(this.lastIndex);
+            const lastControlPoint4 = this.currentObject.getControlPoint(this.lastIndex);
+            const lastControlPoint = new Vector3(lastControlPoint4.x, lastControlPoint4.y, lastControlPoint4.z);
             const plane = new Plane().setFromNormalAndCoplanarPoint(forward, lastControlPoint);
             const intersection = new Vector3();
             raycaster.ray.intersectPlane(plane, intersection);
@@ -125,4 +128,4 @@ class ControlPointMode extends ObjectInspectorMode {
     }
 }
 
-export { BezierPatchInspector };
+export { UniformRationalBSplineSurfaceInspector };

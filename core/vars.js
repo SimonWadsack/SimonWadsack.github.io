@@ -39,6 +39,8 @@ function getIcon(type) {
         case 'UniformBSplineObject': return { name: 'spline', lucide: true };
         case 'UniformRationBSplineObject': return { name: 'diameter', lucide: true };
         case 'BezierPatchObject': return { name: 'grid-2x2', lucide: true };
+        case 'UniformBSplineSurfaceObject': return { name: 'grid-3x3', lucide: true };
+        case 'UniformRationalBSplineSurfaceObject': return { name: 'ratio', lucide: true };
         default: return { name: 'circle-help', lucide: true };
     }
 }

@@ -30,12 +30,23 @@ class SelectionManager {
         domElement.addEventListener('mouseup', (event) => this.onMouseUp(event));
         domElement.addEventListener('mouseenter', () => this.active = true);
         domElement.addEventListener('mouseleave', () => this.active = false);
+        EventBus.subscribe('objectRemoved', "all" /* EEnv.ALL */, (object) => {
+            if (this.selectedObject && this.selectedObject === object) {
+                this.resetSelected();
+            }
+            if (this.hoveredObject && this.hoveredObject === object) {
+                this.resetHovered();
+            }
+        });
     }
     isActive() {
         return this.active;
     }
     getMouse() {
         return this.mouse;
+    }
+    getSelectedObject() {
+        return this.selectedObject;
     }
     getSelectedEditHandleIndex() {
         if (this.selectedEditHandle) {

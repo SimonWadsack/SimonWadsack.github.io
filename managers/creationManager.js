@@ -6,6 +6,8 @@ import { UniformBSplineObject } from '../objects/uniformBSplineObject.js';
 import { UniformRationalBSplineObject } from '../objects/uniformRationalBSplineObject.js';
 import { BezierSplineObject } from '../objects/bezierSplineObject.js';
 import { BezierPatchObject } from '../objects/bezierPatchObject.js';
+import { UniformBSplineSurfaceObject } from '../objects/uniformBSplineSurfaceObject.js';
+import { UniformRationalBSplineSurfaceObject } from '../objects/uniformRationalBSplineSurfaceObject.js';
 
 class CreationManager {
     constructor() {
@@ -79,6 +81,36 @@ class CreationManager {
         const bezierPatchObject = BezierPatchObject.fromJSON(json);
         App.getObjectManager().addObject(bezierPatchObject);
         return bezierPatchObject;
+    }
+    createBasicUniformBSplineSurface() {
+        const controlPoints = [
+            new Vector3(-5, 0, -5), new Vector3(0, 0, -5), new Vector3(5, 0, -5),
+            new Vector3(-5, 0, 0), new Vector3(0, 5, 0), new Vector3(5, 0, 0),
+            new Vector3(-5, 0, 5), new Vector3(0, 0, 5), new Vector3(5, 0, 5)
+        ];
+        const uniformBSplineSurfaceObject = new UniformBSplineSurfaceObject('Uniform B-Spline Surface', controlPoints, 3, 3, 2, new Color('#7f8c8d'));
+        App.getObjectManager().addObject(uniformBSplineSurfaceObject);
+        return uniformBSplineSurfaceObject;
+    }
+    createJSONUniformBSplineSurface(json) {
+        const uniformBSplineSurfaceObject = UniformBSplineSurfaceObject.fromJSON(json);
+        App.getObjectManager().addObject(uniformBSplineSurfaceObject);
+        return uniformBSplineSurfaceObject;
+    }
+    createBasicUniformRationalBSplineSurface() {
+        const controlPoints = [
+            new Vector4(-5, 0, -5, 1), new Vector4(0, 0, -5, 1), new Vector4(5, 0, -5, 1),
+            new Vector4(-5, 0, 0, 1), new Vector4(0, 5, 0, 1), new Vector4(5, 0, 0, 1),
+            new Vector4(-5, 0, 5, 1), new Vector4(0, 0, 5, 1), new Vector4(5, 0, 5, 1)
+        ];
+        const uniformRationalBSplineSurfaceObject = new UniformRationalBSplineSurfaceObject('Uniform Rational B-Spline Surface', controlPoints, 3, 3, 2, new Color('#7f8c8d'));
+        App.getObjectManager().addObject(uniformRationalBSplineSurfaceObject);
+        return uniformRationalBSplineSurfaceObject;
+    }
+    createJSONUniformRationalBSplineSurface(json) {
+        const uniformRationalBSplineSurfaceObject = UniformRationalBSplineSurfaceObject.fromJSON(json);
+        App.getObjectManager().addObject(uniformRationalBSplineSurfaceObject);
+        return uniformRationalBSplineSurfaceObject;
     }
 }
 

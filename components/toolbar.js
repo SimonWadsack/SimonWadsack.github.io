@@ -1,5 +1,6 @@
 import { App } from '../core/app.js';
 import { createTeapot } from '../core/vars.js';
+import { ExportType } from '../managers/exportManager.js';
 
 class Toolbar {
     closed = false;
@@ -74,6 +75,33 @@ class Toolbar {
         teapotColorItem.value = 'teapotColor';
         examplesSubmenu.appendChild(teapotColorItem);
         menu.appendChild(exampleItem);
+        const exportItem = document.createElement('sl-menu-item');
+        const exportIcon = document.createElement('sl-icon');
+        exportIcon.library = 'lucide';
+        exportIcon.name = 'folder-output';
+        exportIcon.slot = 'prefix';
+        exportItem.appendChild(exportIcon);
+        const exportText = document.createTextNode('Export');
+        exportItem.appendChild(exportText);
+        const exportSubmenu = document.createElement('sl-menu');
+        exportSubmenu.slot = 'submenu';
+        exportItem.appendChild(exportSubmenu);
+        const exportOBJItem = document.createElement('sl-menu-item');
+        const exportOBJText = document.createTextNode('OBJ');
+        exportOBJItem.appendChild(exportOBJText);
+        exportOBJItem.value = 'exportOBJ';
+        exportSubmenu.appendChild(exportOBJItem);
+        const exportSTLItem = document.createElement('sl-menu-item');
+        const exportSTLText = document.createTextNode('STL');
+        exportSTLItem.appendChild(exportSTLText);
+        exportSTLItem.value = 'exportSTL';
+        exportSubmenu.appendChild(exportSTLItem);
+        const exportGLTFItem = document.createElement('sl-menu-item');
+        const exportGLTFText = document.createTextNode('GLTF');
+        exportGLTFItem.appendChild(exportGLTFText);
+        exportGLTFItem.value = 'exportGLTF';
+        exportSubmenu.appendChild(exportGLTFItem);
+        menu.appendChild(exportItem);
         menu.addEventListener('sl-select', (event) => {
             switch (event.detail.item.value) {
                 case 'save':
@@ -87,6 +115,15 @@ class Toolbar {
                     break;
                 case 'teapotColor':
                     this.loadTeapotColor();
+                    break;
+                case 'exportOBJ':
+                    this.exportOBJ();
+                    break;
+                case 'exportSTL':
+                    this.exportSTL();
+                    break;
+                case 'exportGLTF':
+                    this.exportGLTF();
                     break;
                 default:
                     console.warn('Unknown menu item selected!');
@@ -158,6 +195,15 @@ class Toolbar {
     }
     loadTeapotColor() {
         createTeapot(2, true);
+    }
+    exportOBJ() {
+        App.getExportManager().export(ExportType.OBJ);
+    }
+    exportSTL() {
+        App.getExportManager().export(ExportType.STL);
+    }
+    exportGLTF() {
+        App.getExportManager().export(ExportType.GLTF);
     }
     resetScene() {
         App.getInteractionsManager().confirm('Reset Scene', 'Are you sure you want to reset the scene?', (value) => {

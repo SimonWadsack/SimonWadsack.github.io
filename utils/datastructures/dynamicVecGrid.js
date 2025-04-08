@@ -1,8 +1,7 @@
 import * as THREE from 'three';
 import { getSelectedColor } from '../../core/vars.js';
-import { BezierCurve } from '../curves/bezierCurve.js';
 
-class DynamicVec3Grid {
+class DynamicVecGrid {
     data;
     width;
     height;
@@ -50,7 +49,7 @@ class DynamicVec3Grid {
         for (let row = 0; row < this.height; row++) {
             for (let col = 0; col < this.width; col++) {
                 const index = (row * this.width + col) * 4;
-                str += `(${this.data[index].toFixed(2)}, ${this.data[index + 1].toFixed(2)}, ${this.data[index + 2].toFixed(2)}) `;
+                str += `(${this.data[index].toFixed(2)}, ${this.data[index + 1].toFixed(2)}, ${this.data[index + 2].toFixed(2)}, ${this.data[index + 3].toFixed(2)}) `;
             }
             str += '\n';
         }
@@ -85,13 +84,29 @@ class DynamicVec3Grid {
             this.rowConnectionVisuals[i].visible = false;
         }
     }
+    getPoint4(row, col) {
+        if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+            throw new Error('Index out of bounds');
+        }
+        const index = (row * this.width + col) * 4;
+        return new THREE.Vector4(this.data[index], this.data[index + 1], this.data[index + 2], this.data[index + 3]);
+    }
     getPoint(row, col) {
-        //console.log(`getPoint(${row}, ${col}) with width: ${this.width}, height: ${this.height}`);
         if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
             throw new Error('Index out of bounds');
         }
         const index = (row * this.width + col) * 4;
         return new THREE.Vector3(this.data[index], this.data[index + 1], this.data[index + 2]);
+    }
+    getPoints4() {
+        const points = [];
+        for (let row = 0; row < this.height; row++) {
+            for (let col = 0; col < this.width; col++) {
+                const index = (row * this.width + col) * 4;
+                points.push(new THREE.Vector4(this.data[index], this.data[index + 1], this.data[index + 2], this.data[index + 3]));
+            }
+        }
+        return points;
     }
     getPoints() {
         const points = [];
@@ -103,18 +118,7 @@ class DynamicVec3Grid {
         }
         return points;
     }
-    getPatchPoints(rows) {
-        const points = [];
-        for (let row = 0; row < this.height; row++) {
-            const curve = new BezierCurve(this.getRow(row));
-            const curvePoints = curve.getPoints(rows);
-            points.push(curvePoints);
-        }
-        //flatten the array of arrays
-        const flatPoints = points.reduce((acc, val) => acc.concat(val), []);
-        return flatPoints;
-    }
-    setPoint(row, col, point) {
+    setPoint4(row, col, point) {
         if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
             throw new Error('Index out of bounds');
         }
@@ -122,7 +126,7 @@ class DynamicVec3Grid {
         this.data[index] = point.x;
         this.data[index + 1] = point.y;
         this.data[index + 2] = point.z;
-        this.data[index + 3] = 1.0; // Alpha channel
+        this.data[index + 3] = point.w;
         this.texture.needsUpdate = true;
         //update col and row visuals
         const columnGeometry = new THREE.BufferGeometry().setFromPoints(this.getColumn(col));
@@ -131,6 +135,20 @@ class DynamicVec3Grid {
         const rowGeometry = new THREE.BufferGeometry().setFromPoints(this.getRow(row));
         this.rowConnectionVisuals[row].geometry.dispose();
         this.rowConnectionVisuals[row].geometry = rowGeometry;
+    }
+    setPoint(row, col, point) {
+        this.setPoint4(row, col, new THREE.Vector4(point.x, point.y, point.z, 1.0));
+    }
+    getColumn4(col) {
+        if (col < 0 || col >= this.width) {
+            throw new Error('Index out of bounds');
+        }
+        const column = [];
+        for (let row = 0; row < this.height; row++) {
+            const index = (row * this.width + col) * 4;
+            column.push(new THREE.Vector4(this.data[index], this.data[index + 1], this.data[index + 2], this.data[index + 3]));
+        }
+        return column;
     }
     getColumn(col) {
         if (col < 0 || col >= this.width) {
@@ -142,6 +160,17 @@ class DynamicVec3Grid {
             column.push(new THREE.Vector3(this.data[index], this.data[index + 1], this.data[index + 2]));
         }
         return column;
+    }
+    getRow4(row) {
+        if (row < 0 || row >= this.height) {
+            throw new Error('Index out of bounds');
+        }
+        const rowData = [];
+        for (let col = 0; col < this.width; col++) {
+            const index = (row * this.width + col) * 4;
+            rowData.push(new THREE.Vector4(this.data[index], this.data[index + 1], this.data[index + 2], this.data[index + 3]));
+        }
+        return rowData;
     }
     getRow(row) {
         if (row < 0 || row >= this.height) {
@@ -306,4 +335,4 @@ class DynamicVec3Grid {
     }
 }
 
-export { DynamicVec3Grid };
+export { DynamicVecGrid };

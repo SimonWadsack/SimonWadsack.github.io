@@ -108,6 +108,12 @@ class VisualObjectFactory {
             case 'BezierPatchObject':
                 App.getCreationManager().createJSONBezierPatch(obj);
                 break;
+            case 'UniformBSplineSurfaceObject':
+                App.getCreationManager().createJSONUniformBSplineSurface(obj);
+                break;
+            case 'UniformRationalBSplineSurfaceObject':
+                App.getCreationManager().createJSONUniformRationalBSplineSurface(obj);
+                break;
             default:
                 console.warn(`Unknown object type: ${type}`);
                 break;
