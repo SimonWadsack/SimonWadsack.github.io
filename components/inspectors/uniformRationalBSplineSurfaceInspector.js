@@ -47,6 +47,7 @@ class ControlPointMode extends ObjectInspectorMode {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Click</b> on a control point to <b>select</b> it.'));
         controls.add(new TextControl('<b>Move</b> the selected control point with the transform controls.'));
+        controls.add(new TextControl('When a control point is selected, <b>scroll</b> to change its weight.'));
         controls.add(new TextControl('<b>Once you have selected a control point</b> (at the edges):'));
         controls.add(new KeyControl('E/Insert', 'Insert a new row and/or column at the mouse position.'));
         controls.add(new KeyControl('R/Delete', 'Remove the last row and/or column.'));
