@@ -1,6 +1,7 @@
 import { Color, Vector3, Raycaster, Plane, Vector4 } from 'three';
 import { SliderElement } from '../../lacery/elements/sliderElement.js';
 import { TextElement } from '../../lacery/elements/textElement.js';
+import { BooleanElement } from '../../lacery/elements/booleanElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
@@ -24,7 +25,7 @@ class ObjectMode extends ObjectInspectorMode {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), degree: 2, color: new Color(0x000000) };
+        this.params = { name: '', position: new Vector3(), degree: 2, color: new Color(0x000000), closed: false };
         this.degreeSlider = new SliderElement("Degree", this.params, 'degree', { min: 2, max: 10, step: 1 });
     }
     build(tab) {
@@ -32,6 +33,7 @@ class ObjectMode extends ObjectInspectorMode {
         tab.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
         tab.add(new ColorElement("Color", this.params, 'color'));
         tab.add(this.degreeSlider);
+        tab.add(new BooleanElement("Closed", this.params, 'closed'));
     }
     select(object) { }
     deselect() { }
@@ -41,12 +43,14 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.color.set(object.getColor());
         this.params.degree = object.getDegree();
         this.degreeSlider.setMax(object.getControlPoints().length - 1);
+        this.params.closed = object.isClosed();
     }
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(this.params.color);
         object.setDegree(this.params.degree);
+        object.setClosed(this.params.closed);
     }
 }
 //#endregion

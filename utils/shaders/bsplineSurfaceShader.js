@@ -14,6 +14,8 @@ function bsplineSurfaceVertexShader() {
     uniform int controlPointsHeight;
     uniform vec3 color;
     uniform int degree;
+    uniform bool closedU;
+    uniform bool closedV;
 
     varying vec3 vColor;
     varying vec3 vNormal;
@@ -73,12 +75,14 @@ function bsplineSurfaceVertexShader() {
     }
 
     vec3 getControlPoint(int i, int j){
-        vec2 texCoord = vec2(float(i) / float(controlPointsWidth - 1), float(j) / float(controlPointsHeight - 1));
+        int modI = i % controlPointsWidth;
+        int modJ = j % controlPointsHeight;
+        vec2 texCoord = vec2(float(modI) / float(controlPointsWidth - 1), float(modJ) / float(controlPointsHeight - 1));
         return texture2D(controlPointsTexture, texCoord).xyz;
     }
 
     void main(){
-        vec2 uvClamped = clamp(uv, 0.0001, 0.9999);
+        vec2 uvClamped = clamp(uv, 0.0, 1.0);
         float u = uvClamped.x;
         float v = uvClamped.y;
 
@@ -86,14 +90,17 @@ function bsplineSurfaceVertexShader() {
         vec3 tangentU = vec3(0.0);
         vec3 tangentV = vec3(0.0);
 
-        int knotsULength = controlPointsWidth - 1 + degree + 2;
-        int knotsVLength = controlPointsHeight - 1 + degree + 2;
+        int closedAddU = closedU ? degree : 0;
+        int closedAddV = closedV ? degree : 0;
 
-        for(int i = 0; i < controlPointsWidth; i++){
+        int knotsULength = controlPointsWidth - 1 + degree + 2 + closedAddU;
+        int knotsVLength = controlPointsHeight - 1 + degree + 2 + closedAddV;
+
+        for(int i = 0; i < controlPointsWidth + closedAddU; i++){
             float modU = getUniformKnotValue(degree) + u * (getUniformKnotValue(knotsULength - degree - 1) - getUniformKnotValue(degree));
             float basisU = basis(degree, i, modU);
             float basisUDerivative = basisDerivative(degree, i, modU);
-            for(int j = 0; j < controlPointsHeight; j++){
+            for(int j = 0; j < controlPointsHeight + closedAddV; j++){
                 vec3 controlPoint = getControlPoint(i, j);
                 float modV = getUniformKnotValue(degree) + v * (getUniformKnotValue(knotsVLength - degree - 1) - getUniformKnotValue(degree));
                 float basisV = basis(degree, j, modV);

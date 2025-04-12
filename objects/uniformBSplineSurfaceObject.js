@@ -21,7 +21,11 @@ class UniformBSplineSurfaceObject extends VisualObject {
     collisionGeometry;
     collisionMesh;
     radius = 0.1;
-    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, degree = 2, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = UniformBSplineSurfaceObjectMode.CONTROL_POINTS) {
+    closedU;
+    closedV;
+    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, degree = 2, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = UniformBSplineSurfaceObjectMode.CONTROL_POINTS, closedU = false, closedV = false) {
+        if (closedU && closedV)
+            throw new Error("Cannot have both closedU and closedV set to true. Please set one of them to false.");
         const grid = new DynamicVecGrid(controlPointsWidth, controlPointsHeight);
         for (let i = 0; i < controlPointsWidth; i++) {
             for (let j = 0; j < controlPointsHeight; j++) {
@@ -37,6 +41,8 @@ class UniformBSplineSurfaceObject extends VisualObject {
                 controlPointsHeight: { value: controlPointsHeight },
                 color: { value: color.clone() },
                 degree: { value: degree },
+                closedU: { value: closedU },
+                closedV: { value: closedV },
                 lightDirection: { value: App.getDirectionalLight().position.clone() },
                 lightColor: { value: App.getDirectionalLight().color.clone() },
                 lightIntensity: { value: App.getDirectionalLight().intensity },
@@ -57,6 +63,8 @@ class UniformBSplineSurfaceObject extends VisualObject {
         this.mode = mode;
         this.color = color;
         this.degree = degree;
+        this.closedU = closedU;
+        this.closedV = closedV;
         this.type = "UniformBSplineSurfaceObject";
         this.export = this.exportMesh.bind(this);
         //Setup control point mode
@@ -70,9 +78,9 @@ class UniformBSplineSurfaceObject extends VisualObject {
         this.hideEditHandles();
         this.controlPoints.addVisuals(this.mesh);
         //Setup collision geometry
-        const width = this.controlPoints.getWidth() + 1;
-        const height = this.controlPoints.getHeight() + 1;
-        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree), width, height);
+        const width = this.controlPoints.getWidth() + 3;
+        const height = this.controlPoints.getHeight() + 3;
+        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree, this.closedU, this.closedV), width, height);
         this.collisionMesh = new THREE.Mesh(this.collisionGeometry, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, visible: false, side: THREE.DoubleSide }));
         this.collisionMesh.userData.collision = true;
         this.collisionMesh.userData.object = this;
@@ -106,6 +114,8 @@ class UniformBSplineSurfaceObject extends VisualObject {
             degree: this.degree,
             color: this.color.getHex(),
             mode: this.mode,
+            closedU: this.closedU,
+            closedV: this.closedV,
         };
     }
     static fromJSON(json) {
@@ -115,7 +125,7 @@ class UniformBSplineSurfaceObject extends VisualObject {
         const mode = json.mode;
         if (UniformBSplineSurfaceObjectMode[mode] === undefined)
             throw new Error("Invalid UniformBSplineSurfaceObjectMode mode");
-        const object = new UniformBSplineSurfaceObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, json.degree, color, position, mode);
+        const object = new UniformBSplineSurfaceObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, json.degree, color, position, mode, json.closedU, json.closedV);
         return object;
     }
     //#endregion
@@ -237,6 +247,10 @@ class UniformBSplineSurfaceObject extends VisualObject {
                 this.setEditHandlePosition(index, this.controlPoints.getPoint(j, i));
             }
         }
+        //check degree
+        if (this.getMaxDegree() < this.degree) {
+            this.degree = this.getMaxDegree();
+        }
         this.updateShader();
         this.updateCollisionGeometry();
     }
@@ -300,18 +314,50 @@ class UniformBSplineSurfaceObject extends VisualObject {
         this.material.uniforms.color.value.set(this.color);
     }
     //#endregion
+    //#region Degree
+    setDegree(degree) {
+        this.degree = degree;
+        this.updateShader();
+        this.updateCollisionGeometry();
+    }
+    getDegree() {
+        return this.degree;
+    }
+    getMaxDegree() {
+        return Math.min(this.controlPoints.getWidth(), this.controlPoints.getHeight()) - 1;
+    }
+    //#region Closed
+    setClosedU(closed) {
+        this.closedU = closed;
+        this.closedV = false; //if closedU is set to true, closedV must be false
+        this.updateShader();
+        this.updateCollisionGeometry();
+    }
+    setClosedV(closed) {
+        this.closedV = closed;
+        this.closedU = false; //if closedV is set to true, closedU must be false
+        this.updateShader();
+        this.updateCollisionGeometry();
+    }
+    getClosedU() {
+        return this.closedU;
+    }
+    getClosedV() {
+        return this.closedV;
+    }
+    //#endregion
     //#region Collision
     updateCollisionGeometry() {
         this.collisionGeometry.dispose();
-        const width = this.controlPoints.getWidth() + 1;
-        const height = this.controlPoints.getHeight() + 1;
-        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree), width, height);
+        const width = this.controlPoints.getWidth() + 3;
+        const height = this.controlPoints.getHeight() + 3;
+        this.collisionGeometry = createGridGeometry(uniformBSplineSurface(this.controlPoints, width, height, this.degree, this.closedU, this.closedV), width, height);
         this.collisionMesh.geometry = this.collisionGeometry;
     }
     //#endregion
     //#region Export
     exportMesh() {
-        const points = uniformBSplineSurface(this.controlPoints, 100, 100, this.degree);
+        const points = uniformBSplineSurface(this.controlPoints, 100, 100, this.degree, this.closedU, this.closedV);
         const geometry = createGridGeometry(points, 100, 100);
         const material = new THREE.MeshStandardMaterial({ color: this.color, side: THREE.DoubleSide });
         const mesh = new THREE.Mesh(geometry, material);
@@ -326,6 +372,9 @@ class UniformBSplineSurfaceObject extends VisualObject {
         this.material.uniforms.controlPointsTexture.value = this.controlPoints.getTexture();
         this.material.uniforms.controlPointsWidth.value = this.controlPoints.getWidth();
         this.material.uniforms.controlPointsHeight.value = this.controlPoints.getHeight();
+        this.material.uniforms.degree.value = this.degree;
+        this.material.uniforms.closedU.value = this.closedU;
+        this.material.uniforms.closedV.value = this.closedV;
         this.material.needsUpdate = true;
     }
 }

@@ -24,8 +24,9 @@ class UniformRationalBSplineObject extends VisualObject {
     connectionVisual;
     weightEditIndex = -1;
     weightEditRing;
-    constructor(name, controlPoints = [new THREE.Vector4(-5, 0, 0, 1), new THREE.Vector4(0, 5, 0, 1), new THREE.Vector4(5, 0, 0, 1)], degree = 2, color = new THREE.Color(0x000000), segments = 100, position = new THREE.Vector3(0, 0, 0), mode = UniformRationalBSplineObjectMode.CONTROL_POINTS) {
-        const curve = new UniformRationalBSplineCurve(controlPoints, degree);
+    closed = false;
+    constructor(name, controlPoints = [new THREE.Vector4(-5, 0, 0, 1), new THREE.Vector4(0, 5, 0, 1), new THREE.Vector4(5, 0, 0, 1)], degree = 2, color = new THREE.Color(0x000000), segments = 100, position = new THREE.Vector3(0, 0, 0), mode = UniformRationalBSplineObjectMode.CONTROL_POINTS, closed = false) {
+        const curve = new UniformRationalBSplineCurve(controlPoints, degree, closed);
         const radius = 0.05;
         const radialSegments = 8;
         const geometry = new THREE.TubeGeometry(curve, segments, radius, radialSegments, false);
@@ -41,6 +42,7 @@ class UniformRationalBSplineObject extends VisualObject {
         this.color = color;
         this.segments = segments;
         this.mode = mode;
+        this.closed = closed;
         this.radius = radius;
         this.radialSegments = radialSegments;
         this.type = 'UniformRationBSplineObject';
@@ -108,7 +110,8 @@ class UniformRationalBSplineObject extends VisualObject {
             degree: this.degree,
             color: this.color.getHex(),
             segments: this.segments,
-            mode: this.mode
+            mode: this.mode,
+            closed: this.closed,
         };
     }
     static fromJSON(json) {
@@ -118,7 +121,7 @@ class UniformRationalBSplineObject extends VisualObject {
         const mode = json.mode;
         if (UniformRationalBSplineObjectMode[mode] === undefined)
             throw new Error("Invalid UniformBSplineObject mode");
-        return new UniformRationalBSplineObject(json.name, controlPoints, json.degree, color, json.segments, position, mode);
+        return new UniformRationalBSplineObject(json.name, controlPoints, json.degree, color, json.segments, position, mode, json.closed);
     }
     //#endregion
     //#region Editing
@@ -196,6 +199,11 @@ class UniformRationalBSplineObject extends VisualObject {
             this.controlPoints.shift();
         else
             this.controlPoints.pop();
+        //check degree
+        if (this.controlPoints.length - 1 < this.degree) {
+            this.degree = this.controlPoints.length - 1;
+            this.curve.setDegree(this.degree);
+        }
         this.recompute();
         this.updateConnectionVisual();
         if (atFront) {
@@ -242,6 +250,16 @@ class UniformRationalBSplineObject extends VisualObject {
     setDegree(degree) {
         this.degree = degree;
         this.curve.setDegree(degree);
+        this.recompute();
+    }
+    //#endregion
+    //#region Closed
+    isClosed() {
+        return this.closed;
+    }
+    setClosed(closed) {
+        this.closed = closed;
+        this.curve.setClosed(closed);
         this.recompute();
     }
     //#endregion

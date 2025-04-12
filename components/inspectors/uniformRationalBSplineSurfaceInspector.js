@@ -1,5 +1,7 @@
 import { Color, Vector3, Raycaster, Plane } from 'three';
+import { SliderElement } from '../../lacery/elements/sliderElement.js';
 import { TextElement } from '../../lacery/elements/textElement.js';
+import { TextSelectElement } from '../../lacery/elements/textSelectElement.js';
 import { ColorElement } from '../../lacery/elements/colorElement.js';
 import { Vec3Element } from '../../lacery/elements/vec3Element.js';
 import { GroupControl, TextControl, KeyControl } from '../controls.js';
@@ -16,16 +18,20 @@ class UniformRationalBSplineSurfaceInspector extends ObjectInspector {
 }
 class ObjectMode extends ObjectInspectorMode {
     params;
+    degreeSlider;
     constructor() {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), color: new Color(0x000000) };
+        this.params = { name: '', position: new Vector3(), color: new Color(0x000000), degree: 0, closed: 'none' };
+        this.degreeSlider = new SliderElement("Degree", this.params, 'degree', { min: 2, max: 10, step: 1 });
     }
     build(tab) {
         tab.add(new TextElement("", this.params, 'name'));
         tab.add(new Vec3Element("Position", this.params.position, 'x', 'y', 'z'));
         tab.add(new ColorElement("Color", this.params, 'color'));
+        tab.add(this.degreeSlider);
+        tab.add(new TextSelectElement("Closed", this.params, 'closed', { "none": "None", "u": "X", "v": "Y" }));
     }
     select(object) { }
     deselect() { }
@@ -33,11 +39,25 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.name = object.getName();
         this.params.position.set(object.getPosition().x, object.getPosition().y, object.getPosition().z);
         this.params.color.set(object.getColor());
+        this.params.degree = object.getDegree();
+        this.degreeSlider.setMax(object.getMaxDegree());
+        this.params.closed = object.getClosedU() ? "u" : object.getClosedV() ? "v" : "none";
     }
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(this.params.color);
+        object.setDegree(this.params.degree);
+        if (this.params.closed === "u") {
+            object.setClosedU(true);
+        }
+        else if (this.params.closed === "v") {
+            object.setClosedV(true);
+        }
+        else {
+            object.setClosedU(false);
+            object.setClosedV(false);
+        }
     }
 }
 class ControlPointMode extends ObjectInspectorMode {

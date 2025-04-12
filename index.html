@@ -26,8 +26,17 @@
         }
       }
     </script>
+    <!-- CDN MathJax -->
     <script type="text/javascript" id="MathJax-script"
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <!-- CDN MathJS -->
+    <script type="importmap">
+      {
+        "imports": {
+          "mathjs": "https://cdnjs.cloudflare.com/ajax/libs/mathjs/14.2.1/math.min.js"
+        }
+      }
     </script>
     <script type="module" crossorigin src="/utils/datastructures/dynamicVecGrid.js"></script>
     <script type="module" crossorigin src="/objects/editHandle.js"></script>
@@ -79,10 +88,12 @@
     <script type="module" crossorigin src="/lacery/elements/labelElement.js"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierCurveInspector.js"></script>
     <script type="module" crossorigin src="/components/inspectors/linearCurveInspector.js"></script>
+    <script type="module" crossorigin src="/lacery/elements/booleanElement.js"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformBSplineInspector.js"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformRationalBSplineInspector.js"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierSplineInspector.js"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierPatchInspector.js"></script>
+    <script type="module" crossorigin src="/lacery/elements/textSelectElement.js"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformBSplineSurfaceInspector.js"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformRationalBSplineSurfaceInspector.js"></script>
     <script type="module" crossorigin src="/components/inspector.js"></script>
@@ -93,6 +104,7 @@
     <script type="module" crossorigin src="/managers/exportManager.js"></script>
     <script type="module" crossorigin src="/components/toolbar.js"></script>
     <script type="module" crossorigin src="/managers/interactionsManager.js"></script>
+    <script type="module" crossorigin src="mathjs"></script>
     <script type="module" crossorigin src="/main.js"></script>
     <link rel="stylesheet" crossorigin href="/style.css">
   </head>
