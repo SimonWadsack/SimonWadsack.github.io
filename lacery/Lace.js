@@ -89,6 +89,17 @@ class Lace {
             element.registerUpdateCallback(() => sameKeyElement.update());
         }
     }
+    disconnect(element) {
+        if (element instanceof FolderElement)
+            return;
+        if (element instanceof GroupElement)
+            return;
+        const sameKeyElements = this.findSameObjectAndKeyElements(element);
+        for (const sameKeyElement of sameKeyElements) {
+            sameKeyElement.deregisterUpdateCallback(() => element.update());
+            element.deregisterUpdateCallback(() => sameKeyElement.update());
+        }
+    }
     findSameObjectAndKeyElements(element) {
         var foundElements = [];
         var workingElements = this.elements.slice();

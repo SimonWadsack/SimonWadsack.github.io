@@ -13,7 +13,6 @@ import { Toolbar } from './components/toolbar.js';
 import { InteractionsManager } from './managers/interactionsManager.js';
 import { Controls } from './components/controls.js';
 import { ExportManager } from './managers/exportManager.js';
-import { sqrt } from 'mathjs';
 
 function init() {
     registerIconLibrary('lucide', {
@@ -56,7 +55,6 @@ function init() {
     const toolbar = new Toolbar(viewportElement);
     App.setToolbar(toolbar);
     App.getIOManager().loadSceneFromCache();
-    console.log(sqrt(2));
     render();
 }
 function render() {

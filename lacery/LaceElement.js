@@ -20,6 +20,12 @@ class LaceElement {
     registerUpdateCallback(callback) {
         this.updateCallbacks.push(callback);
     }
+    deregisterUpdateCallback(callback) {
+        const index = this.updateCallbacks.indexOf(callback);
+        if (index !== -1) {
+            this.updateCallbacks.splice(index, 1);
+        }
+    }
 }
 
 export { LaceElement };

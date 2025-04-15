@@ -20,6 +20,7 @@ function rationalBSplineSurfaceVertexShader() {
     varying vec3 vColor;
     varying vec3 vNormal;
     varying vec3 vPosition;
+    varying vec2 vUV;
 
     float delta = 0.0001;
 
@@ -132,6 +133,7 @@ function rationalBSplineSurfaceVertexShader() {
         vColor = color;
         vNormal = normalize(cross(tangentU, tangentV));
         vPosition = (modelMatrix * vec4(basisPoint, 1.0)).xyz;
+        vUV = uvClamped;
         gl_Position = projectionMatrix * modelViewMatrix * vec4(basisPoint, 1.0);
     }
 `;

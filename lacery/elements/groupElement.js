@@ -38,6 +38,14 @@ class GroupElement extends LaceElement {
         this.add(group);
         return group;
     }
+    reset() {
+        this.elements.forEach(element => {
+            this.lace.disconnect(element);
+        });
+        this.container.innerHTML = '';
+        this.elements = [];
+        this.brs.clear();
+    }
     hide(element) {
         if (!this.elements.includes(element))
             return;

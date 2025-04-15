@@ -1,16 +1,19 @@
 import * as THREE from 'three';
 import { DynamicVecGrid } from '../utils/datastructures/dynamicVecGrid.js';
 import { VisualObject } from './visualObject.js';
-import { bezierPatchFragmentShader, bezierPatchVertexShader } from '../utils/shaders/bezierPatchShader.js';
+import { bezierPatchVertexShader } from '../utils/shaders/bezierPatchShader.js';
 import { App } from '../core/app.js';
 import { getHighlightColor } from '../core/vars.js';
 import { createGridGeometry } from '../utils/surfaces/gridSurface.js';
 import { bezierPatch } from '../utils/surfaces/bezierPatch.js';
+import { SurfaceMaterial, getAvailableShadingModels } from '../utils/shading/surfaceMaterial.js';
+import { PhongShadingModel } from '../utils/shading/shadingModels/phongShadingModel.js';
 
 var BezierPatchObjectMode;
 (function (BezierPatchObjectMode) {
     BezierPatchObjectMode[BezierPatchObjectMode["OBJECT"] = 0] = "OBJECT";
     BezierPatchObjectMode[BezierPatchObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
+    BezierPatchObjectMode[BezierPatchObjectMode["SHADING"] = 2] = "SHADING";
 })(BezierPatchObjectMode || (BezierPatchObjectMode = {}));
 class BezierPatchObject extends VisualObject {
     mode;
@@ -20,7 +23,7 @@ class BezierPatchObject extends VisualObject {
     collisionGeometry;
     collisionMesh;
     radius = 0.1;
-    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = BezierPatchObjectMode.CONTROL_POINTS) {
+    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = BezierPatchObjectMode.CONTROL_POINTS, shadingModel = new PhongShadingModel()) {
         const grid = new DynamicVecGrid(controlPointsWidth, controlPointsHeight);
         for (let i = 0; i < controlPointsWidth; i++) {
             for (let j = 0; j < controlPointsHeight; j++) {
@@ -29,25 +32,8 @@ class BezierPatchObject extends VisualObject {
             }
         }
         const geometry = new THREE.PlaneGeometry(0, 0, 100, 100);
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                controlPointsTexture: { value: grid.getTexture() },
-                controlPointsWidth: { value: controlPointsWidth },
-                controlPointsHeight: { value: controlPointsHeight },
-                color: { value: color.clone() },
-                lightDirection: { value: App.getDirectionalLight().position.clone() },
-                lightColor: { value: App.getDirectionalLight().color.clone() },
-                lightIntensity: { value: App.getDirectionalLight().intensity },
-                ambientIntensity: { value: App.getAmbientLight().intensity },
-                ambientColor: { value: App.getAmbientLight().color.clone() },
-                specularIntensity: { value: 0.3 },
-                specularPower: { value: 16.0 },
-            },
-            vertexShader: bezierPatchVertexShader(),
-            fragmentShader: bezierPatchFragmentShader(),
-            side: THREE.DoubleSide,
-        });
-        const mesh = new THREE.Mesh(geometry, material);
+        const material = new SurfaceMaterial(bezierPatchVertexShader(), grid, color, shadingModel);
+        const mesh = new THREE.Mesh(geometry, material.getMaterial());
         super(name, mesh, position);
         this.controlPoints = grid;
         this.geometry = geometry;
@@ -89,6 +75,10 @@ class BezierPatchObject extends VisualObject {
             this.showEditHandles();
             this.controlPoints.showVisuals();
         }
+        else if (this.mode === BezierPatchObjectMode.SHADING) {
+            this.hideEditHandles();
+            this.controlPoints.hideVisuals();
+        }
     }
     //#endregion
     //#region JSON
@@ -102,6 +92,7 @@ class BezierPatchObject extends VisualObject {
             controlPointsHeight: this.controlPoints.getHeight(),
             color: this.color.getHex(),
             mode: this.mode,
+            shadingModel: { name: this.material.getShadingModelName(), params: this.material.getShadingModelJSON() }
         };
     }
     static fromJSON(json) {
@@ -111,7 +102,11 @@ class BezierPatchObject extends VisualObject {
         const mode = json.mode;
         if (BezierPatchObjectMode[mode] === undefined)
             throw new Error("Invalid BezierPatchObjectMode mode");
-        const object = new BezierPatchObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, color, position, mode);
+        //TODO: move to a shading model factory
+        const shadingModels = getAvailableShadingModels();
+        const shadingModel = shadingModels[json.shadingModel.name].create();
+        shadingModel.fromJSON(json.shadingModel.params);
+        const object = new BezierPatchObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, color, position, mode, shadingModel);
         return object;
     }
     //#endregion
@@ -137,10 +132,13 @@ class BezierPatchObject extends VisualObject {
         this.collisionMesh.userData.collision = true;
     }
     //#endregion
-    //#region Updates
+    //#region Updates & Getters
     updateColor(color) {
         super.setColor(color);
-        this.material.uniforms.color.value.set(this.color);
+        this.material.setColor(color);
+    }
+    getMaterial() {
+        return this.material;
     }
     //#endregion
     //#region Control Points
@@ -181,7 +179,7 @@ class BezierPatchObject extends VisualObject {
                 this.setEditHandlePosition(index, this.controlPoints.getPoint(j, i));
             }
         }
-        this.updateShader();
+        this.material.updateControlPoints();
         this.updateCollisionGeometry();
     }
     addControlPointRowCol(row, col, offset) {
@@ -232,7 +230,7 @@ class BezierPatchObject extends VisualObject {
                 this.setEditHandlePosition(index, this.controlPoints.getPoint(j, i));
             }
         }
-        this.updateShader();
+        this.material.updateControlPoints();
         this.updateCollisionGeometry();
     }
     removeControlPointRowCol(row, col) {
@@ -279,7 +277,7 @@ class BezierPatchObject extends VisualObject {
     //#endregion
     //#region Hightlight and Select (Override)
     highlight() {
-        this.material.uniforms.color.value.set(getHighlightColor());
+        this.material.setColor(getHighlightColor());
     }
     resetHighlight() {
         this.resetColor();
@@ -292,7 +290,7 @@ class BezierPatchObject extends VisualObject {
         this.resetColor();
     }
     resetColor() {
-        this.material.uniforms.color.value.set(this.color);
+        this.material.setColor(this.color);
     }
     //#endregion
     //#region Collision
@@ -314,14 +312,6 @@ class BezierPatchObject extends VisualObject {
         mesh.rotation.copy(this.mesh.rotation);
         mesh.scale.copy(this.mesh.scale);
         return mesh;
-    }
-    //#endregion
-    //#region Private Methods
-    updateShader() {
-        this.material.uniforms.controlPointsTexture.value = this.controlPoints.getTexture();
-        this.material.uniforms.controlPointsWidth.value = this.controlPoints.getWidth();
-        this.material.uniforms.controlPointsHeight.value = this.controlPoints.getHeight();
-        this.material.needsUpdate = true;
     }
 }
 
