@@ -8,33 +8,41 @@
     <!-- CDN Three.js -->
 
     <!-- CDN Shoelace UI -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/light.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/themes/dark.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@latest/cdn/themes/light.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@latest/cdn/themes/dark.css" />
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@v0.174.0/build/three.module.js",
-          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@v0.174.0/examples/jsm/Addons.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
+          "three/examples/jsm/Addons.js": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/Addons.js"
         }
       }
     </script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/cdn/shoelace-autoloader.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@latest/cdn/shoelace-autoloader.js"></script>
     <script type="importmap">
       {
         "imports": {
-          "@shoelace-style/shoelace": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.20.0/+esm"
+          "@shoelace-style/shoelace": "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@latest/+esm"
+        }
+      }
+    </script>
+    <!-- Lacery CDN -->
+    <script type="importmap">
+      {
+        "imports": {
+          "lacery": "https://cdn.jsdelivr.net/npm/lacery@latest/+esm"
         }
       }
     </script>
     <!-- CDN MathJax -->
     <script type="text/javascript" id="MathJax-script"
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+      src="https://cdn.jsdelivr.net/npm/mathjax@latest/es5/tex-mml-chtml.js">
     </script>
     <!-- CDN MathJS -->
     <script type="importmap">
       {
         "imports": {
-          "mathjs": "https://cdn.jsdelivr.net/npm/mathjs@14.4.0/+esm"
+          "mathjs": "https://cdn.jsdelivr.net/npm/mathjs@latest/+esm"
         }
       }
     </script>
@@ -51,11 +59,10 @@
     <script type="module" crossorigin src="/utils/shading/shadingUniformSet.js"></script>
     <script type="module" crossorigin src="/utils/shading/shadingModel.js"></script>
     <script type="module" crossorigin src="/utils/shading/shadingUniform.js"></script>
-    <script type="module" crossorigin src="/utils/shading/shadingModels/simpleShadingModel.js"></script>
-    <script type="module" crossorigin src="/lacery/LaceElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/sliderElement.js"></script>
+    <script type="module" crossorigin src="/utils/shading/shadingModels/diffuseShadingModel.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/utils/shading/shadingModels/phongShadingModel.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/textureElement.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/utils/shading/shadingModels/textureShadingModel.js"></script>
     <script type="module" crossorigin src="/utils/shading/surfaceMaterial.js"></script>
     <script type="module" crossorigin src="/objects/bezierPatchObject.js"></script>
@@ -83,26 +90,26 @@
     <script type="module" crossorigin src="/managers/creationManager.js"></script>
     <script type="module" crossorigin src="/managers/selectionManager.js"></script>
     <script type="module" crossorigin src="/managers/editManager.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/groupElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/folderElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/tabElement.js"></script>
-    <script type="module" crossorigin src="/lacery/Lace.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/controls.js"></script>
     <script type="module" crossorigin src="/components/inspectors/objectInspector.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/textElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/colorElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/vec3Element.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/listElement.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/labelElement.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
+    <script type="module" crossorigin src="lacery"></script>
+    <script type="module" crossorigin src="/components/listElement.js"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierCurveInspector.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/linearCurveInspector.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/booleanElement.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformBSplineInspector.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformRationalBSplineInspector.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierSplineInspector.js"></script>
-    <script type="module" crossorigin src="/lacery/elements/textSelectElement.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/bezierPatchInspector.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformBSplineSurfaceInspector.js"></script>
+    <script type="module" crossorigin src="lacery"></script>
     <script type="module" crossorigin src="/components/inspectors/uniformRationalBSplineSurfaceInspector.js"></script>
     <script type="module" crossorigin src="/components/inspector.js"></script>
     <script type="module" crossorigin src="/components/hierarchy/hierarchyMenu.js"></script>

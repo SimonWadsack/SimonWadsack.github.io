@@ -1,6 +1,6 @@
 import { EventBus } from '../core/events.js';
 import { BezierCurveObject } from '../objects/bezierCurveObject.js';
-import { Lace } from '../lacery/Lace.js';
+import { Lace } from 'lacery';
 import { BezierCurveInspector } from './inspectors/bezierCurveInspector.js';
 import { LinearCurveInspector } from './inspectors/linearCurveInspector.js';
 import { LinearCurveObject } from '../objects/linearCurveObject.js';

@@ -2,7 +2,7 @@ import { App } from '../../../core/app.js';
 import { ShadingModel } from '../shadingModel.js';
 import { Vec3Uniform } from '../shadingUniform.js';
 
-class SimpleShadingModel extends ShadingModel {
+class DiffuseShadingModel extends ShadingModel {
     lightDirection;
     constructor() {
         super();
@@ -10,7 +10,7 @@ class SimpleShadingModel extends ShadingModel {
         this.uniforms.add(this.lightDirection);
     }
     getName() {
-        return "Simple";
+        return "Diffuse";
     }
     getFragmentShader() {
         return simpleFragmentShader();
@@ -37,4 +37,4 @@ function simpleFragmentShader() {
     `;
 }
 
-export { SimpleShadingModel };
+export { DiffuseShadingModel };

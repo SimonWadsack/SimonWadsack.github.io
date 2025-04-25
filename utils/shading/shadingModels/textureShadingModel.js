@@ -1,6 +1,5 @@
 import { App } from '../../../core/app.js';
-import 'three';
-import { TextureElement } from '../../../lacery/elements/textureElement.js';
+import { TextureElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
 import { TextureUniform, Vec3Uniform } from '../shadingUniform.js';
 

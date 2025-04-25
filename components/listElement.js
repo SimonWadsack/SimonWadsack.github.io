@@ -1,4 +1,4 @@
-import { LaceElement } from '../LaceElement.js';
+import { LaceElement } from 'lacery';
 
 class ListElement extends LaceElement {
     container;

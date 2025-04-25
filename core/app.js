@@ -66,7 +66,6 @@ class App {
     static getOrbitControls() {
         return this.is2D ? this.oOrbitControls : this.orbitControls;
     }
-    //TODO - Add a list of callbacks to call when the orbit controls change
     static onOrbitControlsChange(callback) {
         this.orbitControls.addEventListener('change', () => {
             if (!this.is2D)

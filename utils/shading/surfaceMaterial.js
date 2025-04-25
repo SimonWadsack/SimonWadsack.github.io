@@ -1,13 +1,13 @@
 import { ShaderMaterial, DoubleSide } from 'three';
 import { ShadingUniformSet } from './shadingUniformSet.js';
-import { SimpleShadingModel } from './shadingModels/simpleShadingModel.js';
+import { DiffuseShadingModel } from './shadingModels/diffuseShadingModel.js';
 import { PhongShadingModel } from './shadingModels/phongShadingModel.js';
 import { TextureShadingModel } from './shadingModels/textureShadingModel.js';
 
 //TODO: Move to the shading model factory and add a decorator to add the shading model to the list of available shading models
 function getAvailableShadingModels() {
     return {
-        [SimpleShadingModel.name]: { name: "Simple", create: () => new SimpleShadingModel() },
+        [DiffuseShadingModel.name]: { name: "Simple", create: () => new DiffuseShadingModel() },
         [PhongShadingModel.name]: { name: "Phong", create: () => new PhongShadingModel() },
         [TextureShadingModel.name]: { name: "Texture", create: () => new TextureShadingModel("") },
     };

@@ -1,15 +1,11 @@
-import { Color, Vector3, Raycaster, Plane } from 'three';
-import { TextElement } from '../../lacery/elements/textElement.js';
-import { TextSelectElement } from '../../lacery/elements/textSelectElement.js';
-import { ColorElement } from '../../lacery/elements/colorElement.js';
-import { Vec3Element } from '../../lacery/elements/vec3Element.js';
+import { Vector3, Color, Raycaster, Plane } from 'three';
 import { GroupControl, TextControl, KeyControl } from '../controls.js';
 import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
-import { LabelElement } from '../../lacery/elements/labelElement.js';
 import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { getAvailableShadingModels } from '../../utils/shading/surfaceMaterial.js';
-import { SimpleShadingModel } from '../../utils/shading/shadingModels/simpleShadingModel.js';
+import { DiffuseShadingModel } from '../../utils/shading/shadingModels/diffuseShadingModel.js';
+import { TextElement, Vec3Element, ColorElement, LabelElement, TextSelectElement } from 'lacery';
 
 class BezierPatchInspector extends ObjectInspector {
     constructor(lace) {
@@ -23,7 +19,7 @@ class ObjectMode extends ObjectInspectorMode {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), color: new Color(0x000000) };
+        this.params = { name: '', position: new Vector3(), color: "#000000" };
     }
     build(tab) {
         tab.add(new TextElement("", this.params, 'name'));
@@ -35,12 +31,12 @@ class ObjectMode extends ObjectInspectorMode {
     objectChanged(object) {
         this.params.name = object.getName();
         this.params.position.set(object.getPosition().x, object.getPosition().y, object.getPosition().z);
-        this.params.color.set(object.getColor());
+        this.params.color = object.getColor().getHexString();
     }
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
-        object.updateColor(this.params.color);
+        object.updateColor(new Color(this.params.color));
     }
 }
 class ControlPointMode extends ObjectInspectorMode {
@@ -135,7 +131,7 @@ class ShadingMode extends ObjectInspectorMode {
         const controls = new GroupControl();
         super('brick-wall', false, controls, false);
         this.currentObject = null;
-        this.params = { shadingModel: SimpleShadingModel.name, color: new Color(0x000000) };
+        this.params = { shadingModel: DiffuseShadingModel.name, color: "#000000" };
     }
     build(tab) {
         tab.add(new TextSelectElement('Shading Model', this.params, 'shadingModel', this.getShadingModelsDropdown()));
@@ -156,11 +152,11 @@ class ShadingMode extends ObjectInspectorMode {
         this.currentObject = null;
     }
     objectChanged(object) {
-        this.params.color.set(object.getColor());
+        this.params.color = object.getColor().getHexString();
         this.params.shadingModel = object.getMaterial().getShadingModelName();
     }
     inspectorChanged(object) {
-        object.updateColor(this.params.color);
+        object.updateColor(new Color(this.params.color));
         const currentShadingModel = object.getMaterial().getShadingModelName();
         if (currentShadingModel !== this.params.shadingModel) {
             const shadingModel = this.createShadingModel(this.params.shadingModel);

@@ -178,12 +178,4 @@ html, body {
     justify-content: space-between;
 }
 
-.tab-panel::part(base){
-    padding-left: 0.5rem;
-}
-
-.small::part(form-control-label){
-  font-size: var(--sl-input-label-font-size-small);
-}
-
 /*#endregion*/

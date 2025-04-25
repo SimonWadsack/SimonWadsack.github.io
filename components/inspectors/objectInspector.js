@@ -31,7 +31,7 @@ class ObjectInspector {
         modes.forEach((mode, index) => {
             if (mode.disableEditing && mode.objectMode)
                 console.error('Object mode cannot disable editing.');
-            const newTab = this.tab.addTab(`Tab-${index}`, mode.getIcon());
+            const newTab = this.tab.addTab(`Tab-${index}`, mode.getIcon(), "lucide");
             mode.build(newTab);
             newTab.registerOnSelected(() => {
                 this.modeSelected(index);

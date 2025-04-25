@@ -1,6 +1,5 @@
 import { App } from '../../../core/app.js';
-import { SliderElement } from '../../../lacery/elements/sliderElement.js';
-import 'three';
+import { SliderElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
 import { Vec3Uniform, ColorUniform, FloatUniform } from '../shadingUniform.js';
 

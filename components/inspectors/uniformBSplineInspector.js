@@ -1,15 +1,11 @@
-import { Color, Vector3, Raycaster, Plane } from 'three';
-import { SliderElement } from '../../lacery/elements/sliderElement.js';
-import { TextElement } from '../../lacery/elements/textElement.js';
-import { BooleanElement } from '../../lacery/elements/booleanElement.js';
-import { ColorElement } from '../../lacery/elements/colorElement.js';
-import { Vec3Element } from '../../lacery/elements/vec3Element.js';
-import { ListElement, LaceListElement } from '../../lacery/elements/listElement.js';
+import { Vector3, Color, Raycaster, Plane } from 'three';
 import { GroupControl, TextControl, KeyControl } from '../controls.js';
 import { ObjectInspector, ObjectInspectorMode } from './objectInspector.js';
 import { EventBus } from '../../core/events.js';
 import { App } from '../../core/app.js';
 import { getNewPosition } from '../../core/vars.js';
+import { SliderElement, TextElement, Vec3Element, ColorElement, BooleanElement } from 'lacery';
+import { ListElement, LaceListElement } from '../listElement.js';
 
 class UniformBSplineInspector extends ObjectInspector {
     constructor(lace) {
@@ -25,7 +21,7 @@ class ObjectMode extends ObjectInspectorMode {
         const controls = new GroupControl();
         controls.add(new TextControl('<b>Move</b> the object with the transform control.'));
         super('box', true, controls);
-        this.params = { name: '', position: new Vector3(), degree: 2, color: new Color(0x000000), closed: false };
+        this.params = { name: '', position: new Vector3(), degree: 2, color: "#000000", closed: false };
         this.degreeSlider = new SliderElement("Degree", this.params, 'degree', { min: 2, max: 10, step: 1 });
     }
     build(tab) {
@@ -40,7 +36,7 @@ class ObjectMode extends ObjectInspectorMode {
     objectChanged(object) {
         this.params.name = object.getName();
         this.params.position.set(object.getPosition().x, object.getPosition().y, object.getPosition().z);
-        this.params.color.set(object.getColor());
+        this.params.color = object.getColor().getHexString();
         this.params.degree = object.getDegree();
         this.degreeSlider.setMax(object.getControlPoints().length - 1);
         this.params.closed = object.isClosed();
@@ -48,7 +44,7 @@ class ObjectMode extends ObjectInspectorMode {
     inspectorChanged(object) {
         object.setName(this.params.name);
         object.setPosition(this.params.position);
-        object.updateColor(this.params.color);
+        object.updateColor(new Color(this.params.color));
         object.setDegree(this.params.degree);
         object.setClosed(this.params.closed);
     }
