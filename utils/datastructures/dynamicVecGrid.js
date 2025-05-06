@@ -16,6 +16,7 @@ class DynamicVecGrid {
         this.data = new Float32Array(this.width * this.height * 4);
         this.texture = new THREE.DataTexture(this.data, this.width, this.height, THREE.RGBAFormat, THREE.FloatType);
         this.texture.minFilter = this.texture.magFilter = THREE.NearestFilter;
+        this.texture.generateMipmaps = false;
         this.texture.needsUpdate = true;
         this.connectionMaterial = new THREE.LineBasicMaterial({ color: getSelectedColor(), depthTest: false, transparent: true });
         this.columnConnectionVisuals = [];
@@ -331,6 +332,8 @@ class DynamicVecGrid {
         this.data = newData;
         this.texture.dispose();
         this.texture = new THREE.DataTexture(this.data, newWidth, newHeight, THREE.RGBAFormat, THREE.FloatType);
+        this.texture.minFilter = this.texture.magFilter = THREE.NearestFilter;
+        this.texture.generateMipmaps = false;
         this.texture.needsUpdate = true;
     }
 }

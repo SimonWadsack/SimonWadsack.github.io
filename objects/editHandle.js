@@ -1,5 +1,6 @@
 import { SphereGeometry, MeshBasicMaterial, Mesh, Vector3 } from 'three';
 import { getEditHandleColor, getHighlightColor, getSelectedColor } from '../core/vars.js';
+import { App } from '../core/app.js';
 
 class EditHandle {
     parentObject;
@@ -16,6 +17,8 @@ class EditHandle {
         this.mesh = new Mesh(geometry, this.material);
         this.mesh.castShadow = true;
         this.mesh.renderOrder = 1001;
+        this.adjustScale();
+        App.onControlsChange(this.adjustScale.bind(this));
     }
     getMesh() {
         return this.mesh;
@@ -55,6 +58,17 @@ class EditHandle {
     }
     getActive() {
         return this.mesh.visible;
+    }
+    adjustScale() {
+        if (App.dimension2D()) {
+            this.mesh.scale.set(1, 1, 1);
+            return;
+        }
+        const distance = this.mesh.position.distanceTo(App.getCamera().position);
+        const absDistance = Math.abs(distance);
+        const scale = absDistance / 10;
+        const minMaxScale = Math.max(1, Math.min(scale, 20));
+        this.mesh.scale.set(minMaxScale, minMaxScale, minMaxScale);
     }
 }
 

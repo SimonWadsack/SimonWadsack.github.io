@@ -1,4 +1,4 @@
-import { initScene, initGrid, initTooltip } from './core/scene.js';
+import { initScene, initGrid, initTooltip, setupMode } from './core/scene.js';
 import { ObjectManager } from './managers/objectManager.js';
 import { CreationManager } from './managers/creationManager.js';
 import { SelectionManager } from './managers/selectionManager.js';
@@ -13,6 +13,7 @@ import { Toolbar } from './components/toolbar.js';
 import { InteractionsManager } from './managers/interactionsManager.js';
 import { Controls } from './components/controls.js';
 import { ExportManager } from './managers/exportManager.js';
+import { EventBus } from './core/events.js';
 
 function init() {
     registerIconLibrary('lucide', {
@@ -42,6 +43,7 @@ function init() {
     App.setEffectManager(effectManager);
     const ioManager = new IOManager();
     App.setIOManager(ioManager);
+    setupMode();
     const interactionsManager = new InteractionsManager();
     App.setInteractionsManager(interactionsManager);
     const exportManager = new ExportManager();
@@ -55,6 +57,7 @@ function init() {
     const toolbar = new Toolbar(viewportElement);
     App.setToolbar(toolbar);
     App.getIOManager().loadSceneFromCache();
+    EventBus.notify('start', "all" /* EEnv.ALL */);
     render();
 }
 function render() {

@@ -21,6 +21,9 @@ function rationalBSplineSurfaceVertexShader() {
     varying vec3 vNormal;
     varying vec3 vPosition;
     varying vec2 vUV;
+    varying vec3 vViewPosition;
+    varying mat3 vTBN;
+    varying vec3 vWorldNormal;
 
     float delta = 0.0001;
 
@@ -131,53 +134,24 @@ function rationalBSplineSurfaceVertexShader() {
         vec3 tangentV = (numeratorV / denominator) - (numerator * denominatorV / (denominator * denominator));
 
         vColor = color;
-        vNormal = normalize(cross(tangentU, tangentV));
+        vec3 normal = normalize(cross(tangentU, tangentV));
+        vNormal = - normalize(normalMatrix * normal);
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
         vPosition = (modelMatrix * vec4(basisPoint, 1.0)).xyz;
         vUV = uvClamped;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(basisPoint, 1.0);
-    }
-`;
-}
-function rationalBSplineSurfaceFragmentShader() {
-    return /*glsl*/ `
-    uniform vec3 lightDirection;
-    uniform vec3 lightColor;
-    uniform float lightIntensity;
-    uniform float ambientIntensity;
-    uniform vec3 ambientColor;
-    uniform float specularIntensity;  
-    uniform float specularPower; 
+        vec4 mvPosition = modelViewMatrix * vec4(basisPoint, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
 
-    varying vec3 vColor;
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-
-    void main(){
-        // Normalize the normal vector and compute the light direction
-        vec3 norm = normalize(vNormal);
-
-        vec3 lightDir = normalize(-lightDirection);
-
-        // Ambient lighting
-        vec3 ambient = ambientIntensity * ambientColor;
-
-        // Diffuse lighting (Lambert's cosine law)
-        float diff = max(dot(norm, lightDir), 0.0);
-        vec3 diffuse = diff * lightColor * lightIntensity;
-
-        // Specular lighting (Phong reflection model)
-        vec3 viewDir = normalize(vPosition - cameraPosition);
-        vec3 reflectDir = reflect(-lightDir, norm);   // Reflection direction
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularPower);
-        vec3 specular = spec * specularIntensity * lightColor * lightIntensity;
-
-        // Combine all lighting components
-        vec3 finalColor = (ambient + diffuse + specular) * vColor;
-
-        // Output the final color
-        gl_FragColor = vec4(finalColor, 1.0);
+        mat3 TBN = mat3(
+            normalize(normalMatrix * tangentU),
+            normalize(normalMatrix * tangentV),
+            vNormal
+        );
+        
+        vTBN = TBN;
     }
 `;
 }
 
-export { rationalBSplineSurfaceFragmentShader, rationalBSplineSurfaceVertexShader };
+export { rationalBSplineSurfaceVertexShader };

@@ -7,7 +7,7 @@ import { getHighlightColor } from '../core/vars.js';
 import { createGridGeometry } from '../utils/surfaces/gridSurface.js';
 import { bezierPatch } from '../utils/surfaces/bezierPatch.js';
 import { SurfaceMaterial, getAvailableShadingModels } from '../utils/shading/surfaceMaterial.js';
-import { PhongShadingModel } from '../utils/shading/shadingModels/phongShadingModel.js';
+import { BlinnPhongShadingModel } from '../utils/shading/shadingModels/blinnphongShadingModel.js';
 
 var BezierPatchObjectMode;
 (function (BezierPatchObjectMode) {
@@ -23,7 +23,7 @@ class BezierPatchObject extends VisualObject {
     collisionGeometry;
     collisionMesh;
     radius = 0.1;
-    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = BezierPatchObjectMode.CONTROL_POINTS, shadingModel = new PhongShadingModel()) {
+    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = BezierPatchObjectMode.CONTROL_POINTS, shadingModel = new BlinnPhongShadingModel()) {
         const grid = new DynamicVecGrid(controlPointsWidth, controlPointsHeight);
         for (let i = 0; i < controlPointsWidth; i++) {
             for (let j = 0; j < controlPointsHeight; j++) {

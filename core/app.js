@@ -1,4 +1,6 @@
+import { Color } from 'three';
 import { EventBus } from './events.js';
+import { getModeBackgroundColor } from './vars.js';
 
 class App {
     static scene;
@@ -30,6 +32,7 @@ class App {
     static isOrbitingBool = false;
     static isDraggingBool = false;
     static is2D = false;
+    static isDarkMode = false;
     static dimension2D() {
         return this.is2D;
     }
@@ -54,6 +57,24 @@ class App {
         App.getSelectionManager().doResetSelectedEditHandle();
         EventBus.notify('dimensionSwitched', "all" /* EEnv.ALL */, this.is2D);
     }
+    static darkMode() {
+        return this.isDarkMode;
+    }
+    static setMode(darkMode = false) {
+        const app = document.getElementById('app');
+        if (!app)
+            return;
+        if (darkMode) {
+            this.isDarkMode = true;
+            app.classList.add('sl-theme-dark');
+        }
+        else {
+            this.isDarkMode = false;
+            app.classList.remove('sl-theme-dark');
+        }
+        App.getScene().background = new Color(getModeBackgroundColor());
+        App.getIOManager().setFlagCache('darkMode', this.isDarkMode);
+    }
     static getScene() {
         return this.scene;
     }
@@ -75,6 +96,21 @@ class App {
             if (this.is2D)
                 callback();
         });
+    }
+    static onTransformControlsChange(callback) {
+        this.transformControls.addEventListener('change', () => {
+            if (!this.is2D)
+                callback();
+        });
+        this.oTransformControls.addEventListener('change', () => {
+            if (this.is2D)
+                callback();
+        });
+    }
+    static onControlsChange(callback) {
+        this.onOrbitControlsChange(callback);
+        this.onTransformControlsChange(callback);
+        EventBus.subscribe('dimensionSwitched', "all" /* EEnv.ALL */, () => { callback(); });
     }
     static noScroll() {
         this.orbitControls.enableZoom = false;
@@ -218,6 +254,22 @@ class App {
     }
     static isDragging() {
         return this.isDraggingBool;
+    }
+    // #region Default Image
+    static getDefaultImage() {
+        const image = new Image();
+        image.width = 1;
+        image.height = 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const context = canvas.getContext('2d');
+        if (context) {
+            context.fillStyle = '#FFFFFF';
+            context.fillRect(0, 0, 1, 1);
+            image.src = canvas.toDataURL();
+        }
+        return image;
     }
 }
 

@@ -7,12 +7,15 @@ import { createGridGeometry } from '../utils/surfaces/gridSurface.js';
 import { uniformRationalBSplineSurface } from '../utils/surfaces/bsplineSurface.js';
 import { EventBus } from '../core/events.js';
 import { remap } from '../utils/math.js';
-import { rationalBSplineSurfaceFragmentShader, rationalBSplineSurfaceVertexShader } from '../utils/shaders/rationalBSplineSurfaceShader.js';
+import { rationalBSplineSurfaceVertexShader } from '../utils/shaders/rationalBSplineSurfaceShader.js';
+import { BlinnPhongShadingModel } from '../utils/shading/shadingModels/blinnphongShadingModel.js';
+import { SurfaceMaterial, getAvailableShadingModels } from '../utils/shading/surfaceMaterial.js';
 
 var UniformRationalBSplineSurfaceObjectMode;
 (function (UniformRationalBSplineSurfaceObjectMode) {
     UniformRationalBSplineSurfaceObjectMode[UniformRationalBSplineSurfaceObjectMode["OBJECT"] = 0] = "OBJECT";
     UniformRationalBSplineSurfaceObjectMode[UniformRationalBSplineSurfaceObjectMode["CONTROL_POINTS"] = 1] = "CONTROL_POINTS";
+    UniformRationalBSplineSurfaceObjectMode[UniformRationalBSplineSurfaceObjectMode["SHADING"] = 2] = "SHADING";
 })(UniformRationalBSplineSurfaceObjectMode || (UniformRationalBSplineSurfaceObjectMode = {}));
 class UniformRationalBSplineSurfaceObject extends VisualObject {
     mode;
@@ -27,7 +30,7 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
     weightEditRing;
     closedU;
     closedV;
-    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, degree = 2, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = UniformRationalBSplineSurfaceObjectMode.CONTROL_POINTS, closedU = false, closedV = false) {
+    constructor(name, controlPoints, controlPointsWidth, controlPointsHeight, degree = 2, color = new THREE.Color(0x000000), position = new THREE.Vector3(0, 0, 0), mode = UniformRationalBSplineSurfaceObjectMode.CONTROL_POINTS, shadingModel = new BlinnPhongShadingModel(), closedU = false, closedV = false) {
         if (closedU && closedV)
             throw new Error("Cannot have both closedU and closedV set to true. Please set one of them to false.");
         const grid = new DynamicVecGrid(controlPointsWidth, controlPointsHeight);
@@ -38,28 +41,8 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
             }
         }
         const geometry = new THREE.PlaneGeometry(0, 0, 100, 100);
-        const material = new THREE.ShaderMaterial({
-            uniforms: {
-                controlPointsTexture: { value: grid.getTexture() },
-                controlPointsWidth: { value: controlPointsWidth },
-                controlPointsHeight: { value: controlPointsHeight },
-                color: { value: color.clone() },
-                degree: { value: degree },
-                closedU: { value: closedU },
-                closedV: { value: closedV },
-                lightDirection: { value: App.getDirectionalLight().position.clone() },
-                lightColor: { value: App.getDirectionalLight().color.clone() },
-                lightIntensity: { value: App.getDirectionalLight().intensity },
-                ambientIntensity: { value: App.getAmbientLight().intensity },
-                ambientColor: { value: App.getAmbientLight().color.clone() },
-                specularIntensity: { value: 0.3 },
-                specularPower: { value: 16.0 },
-            },
-            vertexShader: rationalBSplineSurfaceVertexShader(),
-            fragmentShader: rationalBSplineSurfaceFragmentShader(),
-            side: THREE.DoubleSide,
-        });
-        const mesh = new THREE.Mesh(geometry, material);
+        const material = new SurfaceMaterial(rationalBSplineSurfaceVertexShader(), grid, color, shadingModel, { degree: { value: degree }, closedU: { value: closedU }, closedV: { value: closedV } });
+        const mesh = new THREE.Mesh(geometry, material.getMaterial());
         super(name, mesh, position);
         this.controlPoints = grid;
         this.geometry = geometry;
@@ -128,6 +111,11 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
             this.showEditHandles();
             this.controlPoints.showVisuals();
         }
+        else if (this.mode === UniformRationalBSplineSurfaceObjectMode.SHADING) {
+            this.hideEditHandles();
+            this.controlPoints.hideVisuals();
+            this.hideWeightEditRing();
+        }
     }
     //#endregion
     //#region JSON
@@ -143,7 +131,8 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
             color: this.color.getHex(),
             mode: this.mode,
             closedU: this.closedU,
-            closedV: this.closedV
+            closedV: this.closedV,
+            shadingModel: { name: this.material.getShadingModelName(), params: this.material.getShadingModelJSON() }
         };
     }
     static fromJSON(json) {
@@ -153,7 +142,11 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         const mode = json.mode;
         if (UniformRationalBSplineSurfaceObjectMode[mode] === undefined)
             throw new Error("Invalid UniformRationalBSplineSurfaceObjectMode mode");
-        const object = new UniformRationalBSplineSurfaceObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, json.degree, color, position, mode, json.closedU, json.closedV);
+        //TODO: move to a shading model factory
+        const shadingModels = getAvailableShadingModels();
+        const shadingModel = shadingModels[json.shadingModel.name].create();
+        shadingModel.fromJSON(json.shadingModel.params);
+        const object = new UniformRationalBSplineSurfaceObject(json.name, controlPoints, json.controlPointsWidth, json.controlPointsHeight, json.degree, color, position, mode, shadingModel, json.closedU, json.closedV);
         return object;
     }
     //#endregion
@@ -200,10 +193,13 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         this.weightEditRing.lookAt(App.getCamera().position);
     }
     //#endregion
-    //#region Updates
+    //#region Updates & Getters
     updateColor(color) {
         super.setColor(color);
-        this.material.uniforms.color.value.set(this.color);
+        this.material.setColor(color);
+    }
+    getMaterial() {
+        return this.material;
     }
     //#endregion
     //#region Control Points
@@ -244,7 +240,7 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
                 this.setEditHandlePosition(index, this.controlPoints.getPoint(j, i));
             }
         }
-        this.updateShader();
+        this.material.updateControlPoints();
         this.updateCollisionGeometry();
     }
     addControlPointRowCol(row, col, offset) {
@@ -300,7 +296,7 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         if (this.getMaxDegree() < this.degree) {
             this.degree = this.getMaxDegree();
         }
-        this.updateShader();
+        this.material.updateControlPoints();
         this.updateCollisionGeometry();
     }
     removeControlPointRowCol(row, col) {
@@ -354,7 +350,7 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
     //#endregion
     //#region Hightlight and Select (Override)
     highlight() {
-        this.material.uniforms.color.value.set(getHighlightColor());
+        this.material.setColor(getHighlightColor());
     }
     resetHighlight() {
         this.resetColor();
@@ -367,13 +363,13 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         this.resetColor();
     }
     resetColor() {
-        this.material.uniforms.color.value.set(this.color);
+        this.material.setColor(this.color);
     }
     //#endregion
     //#region Degree
     setDegree(degree) {
         this.degree = degree;
-        this.updateShader();
+        this.material.setCustomUniform("degree", this.degree);
         this.updateCollisionGeometry();
     }
     getDegree() {
@@ -386,13 +382,15 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
     setClosedU(closed) {
         this.closedU = closed;
         this.closedV = false; //if closedU is set to true, closedV must be false
-        this.updateShader();
+        this.material.setCustomUniform("closedU", this.closedU);
+        this.material.setCustomUniform("closedV", this.closedV);
         this.updateCollisionGeometry();
     }
     setClosedV(closed) {
         this.closedV = closed;
         this.closedU = false; //if closedV is set to true, closedU must be false
-        this.updateShader();
+        this.material.setCustomUniform("closedU", this.closedU);
+        this.material.setCustomUniform("closedV", this.closedV);
         this.updateCollisionGeometry();
     }
     getClosedU() {
@@ -421,17 +419,6 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         mesh.rotation.copy(this.mesh.rotation);
         mesh.scale.copy(this.mesh.scale);
         return mesh;
-    }
-    //#endregion
-    //#region Private Methods
-    updateShader() {
-        this.material.uniforms.controlPointsTexture.value = this.controlPoints.getTexture();
-        this.material.uniforms.controlPointsWidth.value = this.controlPoints.getWidth();
-        this.material.uniforms.controlPointsHeight.value = this.controlPoints.getHeight();
-        this.material.uniforms.degree.value = this.degree;
-        this.material.uniforms.closedU.value = this.closedU;
-        this.material.uniforms.closedV.value = this.closedV;
-        this.material.needsUpdate = true;
     }
 }
 

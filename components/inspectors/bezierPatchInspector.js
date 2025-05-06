@@ -34,6 +34,8 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.color = object.getColor().getHexString();
     }
     inspectorChanged(object) {
+        if (!this.params.color.startsWith('#') && !this.params.color.startsWith('rgb'))
+            this.params.color = '#' + this.params.color;
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(new Color(this.params.color));
@@ -94,7 +96,8 @@ class ControlPointMode extends ObjectInspectorMode {
     build(tab) {
         //TODO: build better list that can accomodate adding controlpoints at the start
         //tab.add(this.laceList);
-        tab.add(new LabelElement("WORK IN PROGRESS"));
+        tab.add(new LabelElement("Control Points", { bold: true }));
+        tab.add(new LabelElement("Work in progress!", { italic: true }));
     }
     select(object) {
         this.currentObject = object;
@@ -129,7 +132,7 @@ class ShadingMode extends ObjectInspectorMode {
     params;
     constructor() {
         const controls = new GroupControl();
-        super('brick-wall', false, controls, false);
+        super('brick-wall', false, controls, true);
         this.currentObject = null;
         this.params = { shadingModel: DiffuseShadingModel.name, color: "#000000" };
     }
@@ -156,6 +159,8 @@ class ShadingMode extends ObjectInspectorMode {
         this.params.shadingModel = object.getMaterial().getShadingModelName();
     }
     inspectorChanged(object) {
+        if (!this.params.color.startsWith('#') && !this.params.color.startsWith('rgb'))
+            this.params.color = '#' + this.params.color;
         object.updateColor(new Color(this.params.color));
         const currentShadingModel = object.getMaterial().getShadingModelName();
         if (currentShadingModel !== this.params.shadingModel) {

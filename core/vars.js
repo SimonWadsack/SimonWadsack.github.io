@@ -12,6 +12,12 @@ function getOrthographicCameraPosition() {
 function getBackgroundColor() {
     return 0xecf0f1;
 }
+function getDarkBackgroundColor() {
+    return 0x2f3030;
+}
+function getModeBackgroundColor() {
+    return App.darkMode() ? getDarkBackgroundColor() : getBackgroundColor();
+}
 function getHighlightColor() {
     return 0xe67e22;
 }
@@ -68,4 +74,4 @@ function createTeapot(multiplier, colorful) {
     }
 }
 
-export { createTeapot, getBackgroundColor, getColorFromPalette, getEditHandleColor, getHighlightColor, getIcon, getNewPosition, getOrthographicCameraPosition, getPerspectiveCameraPosition, getSelectedColor, teapot };
+export { createTeapot, getBackgroundColor, getColorFromPalette, getDarkBackgroundColor, getEditHandleColor, getHighlightColor, getIcon, getModeBackgroundColor, getNewPosition, getOrthographicCameraPosition, getPerspectiveCameraPosition, getSelectedColor, teapot };

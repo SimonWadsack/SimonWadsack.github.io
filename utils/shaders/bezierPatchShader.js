@@ -18,6 +18,9 @@ function bezierPatchVertexShader() {
     varying vec3 vNormal;
     varying vec3 vPosition;
     varying vec2 vUV;
+    varying vec3 vViewPosition;
+    varying mat3 vTBN;
+    varying vec3 vWorldNormal;
 
     float binomial(int n, int k){
         if(k > n) return 0.0;
@@ -68,10 +71,22 @@ function bezierPatchVertexShader() {
         }
 
         vColor = color;
-        vNormal = normalize(cross(tangentU, tangentV));
+        vec3 normal = normalize(cross(tangentU, tangentV));
+        vNormal = - normalize(normalMatrix * normal);
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
         vPosition = (modelMatrix * vec4(bezierPoint, 1.0)).xyz;
         vUV = uvClamped;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(bezierPoint, 1.0);
+        vec4 mvPosition = modelViewMatrix * vec4(bezierPoint, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
+
+        mat3 TBN = mat3(
+            normalize(normalMatrix * tangentU),
+            normalize(normalMatrix * tangentV),
+            vNormal
+        );
+        
+        vTBN = TBN;
     }
 `;
 }

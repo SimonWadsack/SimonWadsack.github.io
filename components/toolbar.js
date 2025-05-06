@@ -150,6 +150,27 @@ class Toolbar {
             dimensionButton.textContent = App.dimension2D() ? '3D' : '2D';
         };
         toolbarDiv.appendChild(dimensionButton);
+        const modeButton = document.createElement('sl-button');
+        const lightModeIcon = document.createElement('sl-icon');
+        lightModeIcon.library = 'lucide';
+        lightModeIcon.name = 'sun';
+        lightModeIcon.slot = 'prefix';
+        lightModeIcon.style.display = App.darkMode() ? 'block' : 'none';
+        modeButton.appendChild(lightModeIcon);
+        const darkModeIcon = document.createElement('sl-icon');
+        darkModeIcon.library = 'lucide';
+        darkModeIcon.name = 'moon';
+        darkModeIcon.slot = 'prefix';
+        darkModeIcon.style.display = App.darkMode() ? 'none' : 'block';
+        modeButton.appendChild(darkModeIcon);
+        modeButton.size = 'medium';
+        modeButton.style.marginLeft = '0.5rem';
+        modeButton.onclick = () => {
+            App.setMode(!App.darkMode());
+            lightModeIcon.style.display = App.darkMode() ? 'block' : 'none';
+            darkModeIcon.style.display = App.darkMode() ? 'none' : 'block';
+        };
+        toolbarDiv.appendChild(modeButton);
         const closeButton = document.createElement('sl-button');
         const closeIcon = document.createElement('sl-icon');
         closeIcon.library = 'lucide';

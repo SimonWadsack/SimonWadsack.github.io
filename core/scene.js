@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls, TransformControls } from 'three/examples/jsm/Addons.js';
-import { getBackgroundColor, getPerspectiveCameraPosition, getOrthographicCameraPosition } from './vars.js';
+import { getPerspectiveCameraPosition, getOrthographicCameraPosition } from './vars.js';
 import { App } from './app.js';
 import { EventBus } from './events.js';
 
@@ -13,7 +13,7 @@ import { EventBus } from './events.js';
 function initScene(container) {
     //create the scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(getBackgroundColor());
+    scene.background = new THREE.Color(0x0000ff);
     //create the cameras
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(...getPerspectiveCameraPosition());
@@ -50,8 +50,8 @@ function initScene(container) {
     const light = new THREE.AmbientLight(0xf0f0f0, 0.2);
     scene.add(light);
     //create the directional light
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-    dirLight.position.set(10, 25, 0);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(15, 20, 0);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
@@ -73,7 +73,7 @@ function initScene(container) {
     const logoDiv = document.createElement('div');
     logoDiv.style.position = 'absolute';
     logoDiv.style.bottom = '1rem';
-    logoDiv.style.right = '22%';
+    logoDiv.style.right = '23%';
     logoDiv.style.display = 'flex';
     logoDiv.style.flexDirection = 'column';
     logoDiv.style.alignItems = 'center';
@@ -143,6 +143,10 @@ function initTooltip(container) {
     container.appendChild(tooltip);
     App.setTooltip(tooltip);
 }
+function setupMode() {
+    const darkMode = App.getIOManager().getFlagCache('darkMode');
+    App.setMode(darkMode);
+}
 function resize(container, camera, oCamera, orthoSize, renderer) {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
@@ -154,4 +158,4 @@ function resize(container, camera, oCamera, orthoSize, renderer) {
     renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
-export { initGrid, initScene, initTooltip };
+export { initGrid, initScene, initTooltip, setupMode };

@@ -1,38 +1,71 @@
-import { App } from '../../../core/app.js';
+import { TextureElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
-import { Vec3Uniform } from '../shadingUniform.js';
+import { BoolUniform, TextureUniform } from '../shadingUniform.js';
 
 class DiffuseShadingModel extends ShadingModel {
-    lightDirection;
+    useMainTexture;
+    mainTexture;
     constructor() {
         super();
-        this.lightDirection = new Vec3Uniform("lightDirection", App.getDirectionalLight().position.clone());
-        this.uniforms.add(this.lightDirection);
+        this.useMainTexture = new BoolUniform("useMainTexture", false);
+        this.mainTexture = new TextureUniform("mainTexture", null);
+        this.uniforms.add(this.useMainTexture);
+        this.uniforms.add(this.mainTexture);
     }
     getName() {
         return "Diffuse";
     }
     getFragmentShader() {
-        return simpleFragmentShader();
+        return diffuseFragmentShader();
     }
-    buildUI(group) { }
+    buildUI(group) {
+        const mainElement = new TextureElement('Texture', this.mainTexture, 'blob');
+        mainElement.onChange(() => {
+            this.useMainTexture.value = mainElement.hasTexture();
+            this.mainTexture.update();
+        });
+        group.add(mainElement);
+    }
     toJSON() { return {}; }
     fromJSON(json) { }
 }
-function simpleFragmentShader() {
+function diffuseFragmentShader() {
     return /*glsl*/ `
-        uniform vec3 lightDirection;
+        uniform bool useMainTexture;
+        uniform sampler2D mainTexture;
 
         varying vec3 vColor;
         varying vec3 vNormal;
         varying vec3 vPosition;
+        varying vec2 vUV;
+        varying vec3 vViewPosition;
+        varying mat3 vTBN;
+
+        #include <common>
+        #include <lights_pars_begin>
     
         void main(){
-            vec3 norm = normalize(vNormal);
-            vec3 lightDir = normalize(-lightDirection);
-            float light = max(dot(norm, lightDir), 0.0);
-            vec3 color = vColor * light;
-            gl_FragColor = vec4(color, 1.0);
+            // Get the base color
+            vec3 color = useMainTexture ? texture2D(mainTexture, vUV).rgb : vColor;
+
+            // Calculate the normal
+            vec3 normal = normalize(vNormal);
+
+            // Calculate the light direction
+            vec3 lightDir = directionalLights[0].direction;
+
+            // Calculate the diffuse part
+            float diff = max(dot(lightDir, normal), 0.0);
+
+            // Calculate the components
+            vec3 lightColor = directionalLights[0].color;
+            vec3 ambient = ambientLightColor;
+            vec3 diffuse = diff * lightColor;
+
+            vec3 finalColor = (ambient + diffuse) * color;
+
+            // Final output
+            gl_FragColor = vec4(finalColor, 1.0);
         }
     `;
 }

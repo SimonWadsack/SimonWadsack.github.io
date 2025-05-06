@@ -22,7 +22,7 @@ html, body {
 }
 
 .sl-toast-stack {
-  right: 22% !important;
+  right: 23% !important;
 }
 
 #inspector{
@@ -123,6 +123,7 @@ html, body {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    color: var(--sl-input-color);
 }
 
 .controls sl-details::part(header){

@@ -16,6 +16,8 @@ import { UniformBSplineSurfaceInspector } from './inspectors/uniformBSplineSurfa
 import { UniformBSplineSurfaceObject } from '../objects/uniformBSplineSurfaceObject.js';
 import { UniformRationalBSplineSurfaceObject } from '../objects/uniformRationalBSplineSurfaceObject.js';
 import { UniformRationalBSplineSurfaceInspector } from './inspectors/uniformRationalBSplineSurfaceInspector.js';
+import { SceneInspector } from './inspectors/sceneInspector.js';
+import { SceneProxyObject } from '../objects/sceneProxyObject.js';
 
 class Inspector {
     lace;
@@ -25,6 +27,7 @@ class Inspector {
         this.currentInspector = null;
         this.lace = new Lace(container);
         this.objectInspectors = new Map();
+        this.objectInspectors.set('scene', new SceneInspector(this.lace));
         this.objectInspectors.set('linearCurve', new LinearCurveInspector(this.lace));
         this.objectInspectors.set('bezierCurve', new BezierCurveInspector(this.lace));
         this.objectInspectors.set('bezierSpline', new BezierSplineInspector(this.lace));
@@ -33,6 +36,7 @@ class Inspector {
         this.objectInspectors.set('bezierPatch', new BezierPatchInspector(this.lace));
         this.objectInspectors.set('uniformBSplineSurface', new UniformBSplineSurfaceInspector(this.lace));
         this.objectInspectors.set('uniformRationalBSplineSurface', new UniformRationalBSplineSurfaceInspector(this.lace));
+        EventBus.subscribe('start', "all" /* EEnv.ALL */, () => this.updateInspector(null));
         EventBus.subscribe('objectSelected', "all" /* EEnv.ALL */, (object) => this.updateInspector(object));
         EventBus.subscribe('objectUnselected', "all" /* EEnv.ALL */, () => this.updateInspector(null));
         EventBus.subscribe('objectRemoved', "all" /* EEnv.ALL */, () => this.updateInspector(null));
@@ -43,6 +47,12 @@ class Inspector {
         if (!object) {
             this.lace.hideAll();
             this.currentInspector?.deselect();
+            const sceneInspector = this.objectInspectors.get('scene');
+            if (sceneInspector !== undefined) {
+                sceneInspector.select(new SceneProxyObject());
+                this.currentInspector = sceneInspector;
+                return;
+            }
             this.currentInspector = null;
             return;
         }
