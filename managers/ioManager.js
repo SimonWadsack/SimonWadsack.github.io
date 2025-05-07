@@ -17,7 +17,7 @@ class IOManager {
     loadSceneFromFile() {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.json';
+        input.accept = '.svis';
         input.onchange = (event) => {
             try {
                 const target = event.target;

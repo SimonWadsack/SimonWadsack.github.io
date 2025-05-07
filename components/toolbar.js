@@ -206,7 +206,7 @@ class Toolbar {
     save() {
         const now = new Date();
         const formattedDate = now.toISOString().split('.')[0].replaceAll('-', '_').replace('T', '-').replaceAll(':', '_');
-        App.getIOManager().saveSceneToFile('SplineVis_' + formattedDate + '.json');
+        App.getIOManager().saveSceneToFile('SplineVis_' + formattedDate + '.svis');
     }
     load() {
         App.getIOManager().loadSceneFromFile();
