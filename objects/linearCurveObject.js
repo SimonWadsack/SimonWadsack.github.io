@@ -92,6 +92,9 @@ class LinearCurveObject extends VisualObject {
         super.setColor(color);
         this.material.color.set(color);
     }
+    dispose() {
+        this.material.dispose();
+    }
     //#endregion
     //#region Control Points
     addControlPoint(point, atFront = false) {

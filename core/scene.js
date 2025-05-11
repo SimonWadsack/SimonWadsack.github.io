@@ -64,9 +64,7 @@ function initScene(container) {
     scene.add(dirLight);
     //scene.add(new THREE.DirectionalLightHelper(dirLight, 5, 0x000000));
     window.addEventListener('resize', () => resize(container, camera, orthographicCamera, orthoSize, renderer));
-    window.addEventListener('keyup', (e) => { if (e.key === 'd') {
-        App.switchDimension();
-    } });
+    // window.addEventListener('keyup', (e) => { if(e.key === 'd') { App.switchDimension(); }}); - Moved to InteractionsManager
     window.addEventListener('beforeunload', () => App.getIOManager().saveSceneToCache());
     App.setupScene(scene, camera, orthographicCamera, renderer, controls, oControls, transformControls, oTransformControls, light, dirLight);
     //add logo

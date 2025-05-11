@@ -2,6 +2,7 @@ import { Color, Vector3, MathUtils } from 'three';
 import { EditHandle } from './editHandle.js';
 import { App } from '../core/app.js';
 
+// #endregion
 /**
  * An abstract class that represents a visual object in the scene.
  *

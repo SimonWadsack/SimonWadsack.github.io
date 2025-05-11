@@ -14,6 +14,7 @@ function getAvailableShadingModels() {
         [PBRShadingModel.name]: { name: "PBR", create: () => new PBRShadingModel() },
     };
 }
+// TODO: Texture Saving with Dexie, Tiling for textures, Bundle File that contains textures
 class SurfaceMaterial {
     vertexShader;
     controlPoints;
@@ -27,6 +28,7 @@ class SurfaceMaterial {
         this.controlPoints = controlPoints;
         this.color = color.clone();
         this.shadingModel = shadingModel;
+        this.shadingModel.setUpdateCallback(this.updateUniforms.bind(this));
         this.uniformSet = new ShadingUniformSet();
         this.uniformSet.mergeFrom(shadingModel.getUniforms());
         this.material = new ShaderMaterial({
@@ -57,7 +59,10 @@ class SurfaceMaterial {
         //this.material.needsUpdate = true;
     }
     setShadingModel(shadingModel) {
+        this.shadingModel.removeUpdateCallback();
+        this.shadingModel.dispose();
         this.shadingModel = shadingModel;
+        this.shadingModel.setUpdateCallback(this.updateUniforms.bind(this));
         this.uniformSet.mergeFrom(shadingModel.getUniforms());
         this.material.fragmentShader = shadingModel.getFragmentShader();
         this.updateUniforms();
@@ -86,6 +91,11 @@ class SurfaceMaterial {
         else {
             this.material.uniforms[name] = { value: value };
         }
+    }
+    dispose() {
+        this.shadingModel.removeUpdateCallback();
+        this.shadingModel.dispose();
+        this.material.dispose();
     }
     updateUniforms() {
         const newUniforms = this.getUniforms();

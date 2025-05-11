@@ -86,6 +86,7 @@ class ObjectManager {
             console.error(`removeObject: Object with id ${uuid} has no mesh!`);
             return;
         }
+        visualObject.dispose();
         App.getScene().remove(mesh);
         this.objects.delete(uuid);
         this.meshLookup.delete(mesh);

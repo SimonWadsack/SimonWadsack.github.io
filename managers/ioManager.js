@@ -54,7 +54,9 @@ class IOManager {
         return value ? value === 'true' : false;
     }
     objectsToJSON() {
-        return JSON.stringify({ '2d': App.dimension2D(), objects: App.getObjectManager().getObjects().map(obj => obj.toJSON()) }, null, 1);
+        return JSON.stringify({ '2d': App.dimension2D(),
+            'scene': App.getSceneProxy().toJSON(),
+            objects: App.getObjectManager().getObjects().map(obj => obj.toJSON()) }, null, 1);
     }
     objectsFromJSON(jsonString, restored = false) {
         try {
@@ -62,12 +64,16 @@ class IOManager {
             if (data['2d'] == null || data['2d'] == undefined) {
                 throw new Error('Could not find the 2d flag in the JSON file!');
             }
+            if (data.scene == null || data.scene == undefined) {
+                throw new Error('Could not find the scene object in the JSON file!');
+            }
             if (data.objects == null || data.objects == undefined) {
                 throw new Error('Could not find the objects array in the JSON file!');
             }
             if ((data['2d'] && !App.dimension2D()) || (!data['2d'] && App.dimension2D())) {
                 App.switchDimension();
             }
+            App.getSceneProxy().fromJSON(data.scene);
             for (const obj of data.objects) {
                 VisualObjectFactory.createVisualObject(obj);
             }

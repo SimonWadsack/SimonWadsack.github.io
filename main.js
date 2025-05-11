@@ -14,6 +14,7 @@ import { InteractionsManager } from './managers/interactionsManager.js';
 import { Controls } from './components/controls.js';
 import { ExportManager } from './managers/exportManager.js';
 import { EventBus } from './core/events.js';
+import { SceneProxyObject } from './objects/sceneProxyObject.js';
 
 function init() {
     registerIconLibrary('lucide', {
@@ -56,8 +57,12 @@ function init() {
     App.setInspector(inspector);
     const toolbar = new Toolbar(viewportElement);
     App.setToolbar(toolbar);
+    const sceneProxy = new SceneProxyObject();
+    App.setSceneProxy(sceneProxy);
     App.getIOManager().loadSceneFromCache();
-    EventBus.notify('start', "all" /* EEnv.ALL */);
+    document.addEventListener('DOMContentLoaded', () => {
+        EventBus.notify('start', "all" /* EEnv.ALL */);
+    });
     render();
 }
 function render() {

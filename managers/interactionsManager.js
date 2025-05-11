@@ -1,13 +1,21 @@
+import { App } from '../core/app.js';
+
 class InteractionsManager {
     keydowns;
+    static blockedTags = ['SL-INPUT', 'SL-COLOR-PICKER'];
     constructor() {
         this.keydowns = new Map();
         window.addEventListener('keydown', (event) => {
             const key = event.key;
+            const target = event.target;
+            if (InteractionsManager.blockedTags.includes(target.tagName)) {
+                return;
+            }
             if (this.keydowns.has(key)) {
                 this.keydowns.get(key)?.forEach(callback => callback());
             }
         });
+        this.addKeydown('d', () => { App.switchDimension(); });
     }
     addKeydown(key, callback) {
         if (this.keydowns.has(key)) {

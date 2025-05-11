@@ -48,8 +48,22 @@ class LightsMode extends ObjectInspectorMode {
     }
     select(object) { }
     deselect() { }
-    objectChanged(object) { }
-    inspectorChanged(object) { }
+    objectChanged(object) {
+        this.dirParams.dirLightRotation = object.dirRotation;
+        this.dirParams.dirLightIntensity = object.dirIntensity;
+        this.dirParams.dirLightColor = object.dirColor;
+        this.ambParams.ambLightIntensity = object.ambIntensity;
+        this.ambParams.ambLightColor = object.ambColor;
+        this.updateDirectionalLight();
+        this.updateAmbientLight();
+    }
+    inspectorChanged(object) {
+        object.dirRotation = this.dirParams.dirLightRotation;
+        object.dirIntensity = this.dirParams.dirLightIntensity;
+        object.dirColor = this.dirParams.dirLightColor;
+        object.ambIntensity = this.ambParams.ambLightIntensity;
+        object.ambColor = this.ambParams.ambLightColor;
+    }
 }
 //#endregion
 //#region EnviromentMode
@@ -61,12 +75,15 @@ class EnviromentMode extends ObjectInspectorMode {
         super('tent-tree', false, controls, true);
         this.params = { exrName: "outdoor", exrIntensity: 1, showBackground: false };
         this.exrLoader = new EXRLoader();
+        EventBus.subscribe('dimensionSwitched', "all" /* EEnv.ALL */, () => {
+            this.updateBackground();
+        });
     }
     build(tab) {
         tab.add(new LabelElement("Scene Enviroment", { bold: true }));
         tab.add(new TextSelectElement("Map", this.params, 'exrName', { 'outdoor': 'Outdoor', 'indoor': 'Indoor', 'space': 'Space', 'northernLights': 'Northern Lights' }).onChange(this.updateEnviroment.bind(this)));
         tab.add(new SliderElement("Intensity", this.params, "exrIntensity", { min: 0, max: 5, step: 0.1 }).onChange(this.updateEnviromentIntensity.bind(this)));
-        tab.add(new BooleanElement("Show Background", this.params, "showBackground").onChange(this.updateBackground.bind(this)));
+        tab.add(new BooleanElement("Show Background", this.params, "showBackground", { help: 'Background will only be shown in 3D Mode.' }).onChange(this.updateBackground.bind(this)));
     }
     updateEnviroment() {
         this.exrLoader.load(`/exrs/${this.params.exrName}.exr`, (texture) => {
@@ -75,7 +92,7 @@ class EnviromentMode extends ObjectInspectorMode {
             texture.flipY = false;
             App.getScene().environment = texture;
             App.getScene().environmentIntensity = this.params.exrIntensity;
-            if (this.params.showBackground) {
+            if (this.params.showBackground && !App.dimension2D()) {
                 App.getScene().background = texture;
                 App.getScene().backgroundIntensity = this.params.exrIntensity;
             }
@@ -95,7 +112,7 @@ class EnviromentMode extends ObjectInspectorMode {
         EventBus.notify('enviromentIntensityChanged', "all" /* EEnv.ALL */);
     }
     updateBackground() {
-        if (this.params.showBackground) {
+        if (this.params.showBackground && !App.dimension2D()) {
             App.getScene().background = App.getScene().environment;
             App.getScene().backgroundIntensity = this.params.exrIntensity;
         }
@@ -109,8 +126,21 @@ class EnviromentMode extends ObjectInspectorMode {
             this.updateEnviroment();
     }
     deselect() { }
-    objectChanged(object) { }
-    inspectorChanged(object) { }
+    objectChanged(object) {
+        if (object.envMap !== this.params.exrName) {
+            this.params.exrName = object.envMap;
+            this.params.exrIntensity = object.envIntensity;
+            this.updateEnviroment();
+        }
+        else if (object.envIntensity !== this.params.exrIntensity) {
+            this.params.exrIntensity = object.envIntensity;
+            this.updateEnviromentIntensity();
+        }
+    }
+    inspectorChanged(object) {
+        object.envMap = this.params.exrName;
+        object.envIntensity = this.params.exrIntensity;
+    }
 }
 //#endregion
 //#region SettingsMode

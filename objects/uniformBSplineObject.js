@@ -210,6 +210,9 @@ class UniformBSplineObject extends VisualObject {
         super.setColor(color);
         this.material.color.set(color);
     }
+    dispose() {
+        this.material.dispose();
+    }
     //#endregion
     //#region Highlight and Select (Override)
     highlight() {

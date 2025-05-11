@@ -29,6 +29,7 @@ class App {
     static hierarchy;
     static toolbar;
     static controls;
+    static sceneProxy;
     static isOrbitingBool = false;
     static isDraggingBool = false;
     static is2D = false;
@@ -74,6 +75,7 @@ class App {
         }
         App.getScene().background = new Color(getModeBackgroundColor());
         App.getIOManager().setFlagCache('darkMode', this.isDarkMode);
+        EventBus.notify('modeSwitched', "all" /* EEnv.ALL */, this.isDarkMode);
     }
     static getScene() {
         return this.scene;
@@ -249,6 +251,12 @@ class App {
     static setControls(controls) {
         this.controls = controls;
     }
+    static getSceneProxy() {
+        return this.sceneProxy;
+    }
+    static setSceneProxy(sceneProxy) {
+        this.sceneProxy = sceneProxy;
+    }
     static isOrbiting() {
         return this.isOrbitingBool;
     }
@@ -272,5 +280,16 @@ class App {
         return image;
     }
 }
+const fetchTexture = async (folder, map) => {
+    const url = `textures/${folder}/${map}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch texture: ${response.statusText}`);
+    }
+    const blob = await response.blob();
+    if (blob.size === 0 || blob.type === 'text/html')
+        return null;
+    return blob;
+};
 
-export { App };
+export { App, fetchTexture };

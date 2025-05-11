@@ -1,4 +1,5 @@
-import { TextureElement, SliderElement } from 'lacery';
+import { fetchTexture } from '../../../core/app.js';
+import { TextureElement, ButtonSelectElement, SliderElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
 import { BoolUniform, TextureUniform, FloatUniform } from '../shadingUniform.js';
 
@@ -13,6 +14,10 @@ class BlinnPhongShadingModel extends ShadingModel {
     normalStrength;
     useAOMap;
     aoMap;
+    mainElement;
+    roughnessElement;
+    normalElement;
+    aoElement;
     constructor() {
         super();
         this.useMainTexture = new BoolUniform("useMainTexture", false);
@@ -35,6 +40,30 @@ class BlinnPhongShadingModel extends ShadingModel {
         this.uniforms.add(this.normalStrength);
         this.uniforms.add(this.useAOMap);
         this.uniforms.add(this.aoMap);
+        const mainElement = new TextureElement('Albedo', this.mainTexture, 'blob');
+        mainElement.onChange(() => {
+            this.useMainTexture.value = mainElement.hasTexture();
+            this.mainTexture.update();
+        });
+        this.mainElement = mainElement;
+        const roughnessElement = new TextureElement('Roughness', this.roughnessMap, 'blob');
+        roughnessElement.onChange(() => {
+            this.useRoughnessMap.value = roughnessElement.hasTexture();
+            this.roughnessMap.update();
+        });
+        this.roughnessElement = roughnessElement;
+        const normalElement = new TextureElement('Normal', this.normalMap, 'blob');
+        normalElement.onChange(() => {
+            this.useNormalMap.value = normalElement.hasTexture();
+            this.normalMap.update();
+        });
+        this.normalElement = normalElement;
+        const aoElement = new TextureElement('Ambient Occlusion', this.aoMap, 'blob');
+        aoElement.onChange(() => {
+            this.useAOMap.value = aoElement.hasTexture();
+            this.aoMap.update();
+        });
+        this.aoElement = aoElement;
     }
     getName() {
         return "Blinn-Phong";
@@ -43,37 +72,76 @@ class BlinnPhongShadingModel extends ShadingModel {
         return blinnPhongFragmentShader();
     }
     buildUI(group) {
-        const mainElement = new TextureElement('Texture', this.mainTexture, 'blob');
-        mainElement.onChange(() => {
-            this.useMainTexture.value = mainElement.hasTexture();
-            this.mainTexture.update();
-        });
-        group.add(mainElement);
-        const roughnessElement = new TextureElement('Roughness', this.roughnessMap, 'blob');
-        roughnessElement.onChange(() => {
-            this.useRoughnessMap.value = roughnessElement.hasTexture();
-            this.roughnessMap.update();
-        });
-        group.add(roughnessElement);
+        group.add(new ButtonSelectElement('Load a preset...', { 'rock': 'Rock', 'mossyrock': 'Mossy Rock', 'bark': 'Bark', 'onyx': 'Onyx' }, this.presetSelect.bind(this), { previews: ['textures/rock/albedo.jpg', 'textures/mossyrock/albedo.jpg', 'textures/bark/albedo.jpg', 'textures/onyx/albedo.jpg'], previewSize: 64 }));
+        group.add(this.mainElement);
+        group.add(this.roughnessElement);
         group.add(new SliderElement('Shininess', this.shininess, 'value', { min: 0.01, max: 1.0, step: 0.01 }));
-        const normalElement = new TextureElement('Normal', this.normalMap, 'blob');
-        normalElement.onChange(() => {
-            this.useNormalMap.value = normalElement.hasTexture();
-            this.normalMap.update();
-        });
-        group.add(normalElement);
+        group.add(this.normalElement);
         group.add(new SliderElement('Normal Strength', this.normalStrength, 'value', { min: 0.0, max: 1.0, step: 0.01 }));
-        const aoElement = new TextureElement('Ambient Occlusion', this.aoMap, 'blob');
-        aoElement.onChange(() => {
-            this.useAOMap.value = aoElement.hasTexture();
-            this.aoMap.update();
-        });
-        group.add(aoElement);
+        group.add(this.aoElement);
     }
     toJSON() {
-        return {};
+        return {
+            shininess: this.shininess.value,
+            normalStrength: this.normalStrength.value,
+        };
     }
     fromJSON(json) {
+        this.shininess.value = json.shininess;
+        this.normalStrength.value = json.normalStrength;
+    }
+    dispose() {
+        this.mainTexture.blob = null;
+        this.mainTexture.update();
+        this.roughnessMap.blob = null;
+        this.roughnessMap.update();
+        this.normalMap.blob = null;
+        this.normalMap.update();
+        this.aoMap.blob = null;
+        this.aoMap.update();
+        this.mainElement.updateBlob();
+        this.roughnessElement.updateBlob();
+        this.normalElement.updateBlob();
+        this.aoElement.updateBlob();
+    }
+    async presetSelect(folder) {
+        const fileNames = {
+            albedo: 'albedo.jpg',
+            ambientocclusion: 'ao.jpg',
+            //displacement: 'displacement.jpg',
+            normal: 'normal.jpg',
+            roughness: 'roughness.jpg',
+        };
+        try {
+            const [albedo, ao, normal, roughness] = await Promise.all([
+                fetchTexture(folder, fileNames.albedo),
+                fetchTexture(folder, fileNames.ambientocclusion),
+                //fetchTexture(folder, fileNames.displacement),
+                fetchTexture(folder, fileNames.normal),
+                fetchTexture(folder, fileNames.roughness),
+            ]);
+            this.mainTexture.blob = albedo;
+            this.useMainTexture.value = true;
+            this.mainTexture.update();
+            this.roughnessMap.blob = roughness;
+            this.useRoughnessMap.value = true;
+            this.roughnessMap.update();
+            this.normalMap.blob = normal;
+            this.useNormalMap.value = true;
+            this.normalMap.update();
+            this.aoMap.blob = ao;
+            this.useAOMap.value = true;
+            this.aoMap.update();
+            this.mainElement.updateBlob();
+            this.roughnessElement.updateBlob();
+            this.normalElement.updateBlob();
+            this.aoElement.updateBlob();
+            this.updateCallback?.();
+        }
+        catch (e) {
+            console.error("Error loading textures", e);
+            return;
+        }
     }
 }
 function blinnPhongFragmentShader() {
@@ -105,7 +173,7 @@ function blinnPhongFragmentShader() {
     
         void main(){
             // Get the base color
-            vec3 color = useMainTexture ? texture2D(mainTexture, vUV).rgb : vColor;
+            vec3 albedo = useMainTexture ? texture2D(mainTexture, vUV).rgb : vColor;
 
             // Get the normal (one minus as a weird fix beacause the vertex shader flips the sides)
             vec3 normal = normalize(vNormal);
@@ -144,7 +212,7 @@ function blinnPhongFragmentShader() {
             vec3 diffuse = diff * lightColor;
             vec3 specular = spec * lightColor;
 
-            vec3 blinnPhong = (ambient + diffuse + specular) * color;
+            vec3 blinnPhong = (ambient + diffuse + specular) * albedo;
 
             // Final output
             gl_FragColor = vec4(blinnPhong, 1.0);

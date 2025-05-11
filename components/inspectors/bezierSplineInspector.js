@@ -35,6 +35,8 @@ class ObjectMode extends ObjectInspectorMode {
         this.params.color = object.getColor().getHexString();
     }
     inspectorChanged(object) {
+        if (!this.params.color.startsWith('#') && !this.params.color.startsWith('rgb'))
+            this.params.color = '#' + this.params.color;
         object.setName(this.params.name);
         object.setPosition(this.params.position);
         object.updateColor(new Color(this.params.color));

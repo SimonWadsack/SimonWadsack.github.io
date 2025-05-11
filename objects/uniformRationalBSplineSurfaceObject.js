@@ -193,13 +193,16 @@ class UniformRationalBSplineSurfaceObject extends VisualObject {
         this.weightEditRing.lookAt(App.getCamera().position);
     }
     //#endregion
-    //#region Updates & Getters
+    //#region Updates & Getters & Dispose
     updateColor(color) {
         super.setColor(color);
         this.material.setColor(color);
     }
     getMaterial() {
         return this.material;
+    }
+    dispose() {
+        this.material.dispose();
     }
     //#endregion
     //#region Control Points

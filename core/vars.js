@@ -25,7 +25,7 @@ function getSelectedColor() {
     return 0xe74c3c;
 }
 function getEditHandleColor() {
-    return 0x34495e;
+    return App.darkMode() ? 0xacbfd1 : 0x34495e;
 }
 function getColorFromPalette(i) {
     const colors = [0x1abc9c, 0x2ecc71, 0x3498db, 0x9b59b6, 0x34495e, 0xf1c40f, 0xd35400, 0xe74c3c];

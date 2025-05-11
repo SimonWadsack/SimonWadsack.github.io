@@ -5,12 +5,19 @@ import { BoolUniform, TextureUniform } from '../shadingUniform.js';
 class DiffuseShadingModel extends ShadingModel {
     useMainTexture;
     mainTexture;
+    mainElement;
     constructor() {
         super();
         this.useMainTexture = new BoolUniform("useMainTexture", false);
         this.mainTexture = new TextureUniform("mainTexture", null);
         this.uniforms.add(this.useMainTexture);
         this.uniforms.add(this.mainTexture);
+        const mainElement = new TextureElement('Texture', this.mainTexture, 'blob');
+        mainElement.onChange(() => {
+            this.useMainTexture.value = mainElement.hasTexture();
+            this.mainTexture.update();
+        });
+        this.mainElement = mainElement;
     }
     getName() {
         return "Diffuse";
@@ -19,15 +26,15 @@ class DiffuseShadingModel extends ShadingModel {
         return diffuseFragmentShader();
     }
     buildUI(group) {
-        const mainElement = new TextureElement('Texture', this.mainTexture, 'blob');
-        mainElement.onChange(() => {
-            this.useMainTexture.value = mainElement.hasTexture();
-            this.mainTexture.update();
-        });
-        group.add(mainElement);
+        group.add(this.mainElement);
     }
     toJSON() { return {}; }
     fromJSON(json) { }
+    dispose() {
+        this.mainTexture.blob = null;
+        this.mainTexture.update();
+        this.mainElement.updateBlob();
+    }
 }
 function diffuseFragmentShader() {
     return /*glsl*/ `

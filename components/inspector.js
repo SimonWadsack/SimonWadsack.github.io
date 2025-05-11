@@ -17,7 +17,7 @@ import { UniformBSplineSurfaceObject } from '../objects/uniformBSplineSurfaceObj
 import { UniformRationalBSplineSurfaceObject } from '../objects/uniformRationalBSplineSurfaceObject.js';
 import { UniformRationalBSplineSurfaceInspector } from './inspectors/uniformRationalBSplineSurfaceInspector.js';
 import { SceneInspector } from './inspectors/sceneInspector.js';
-import { SceneProxyObject } from '../objects/sceneProxyObject.js';
+import { App } from '../core/app.js';
 
 class Inspector {
     lace;
@@ -42,6 +42,7 @@ class Inspector {
         EventBus.subscribe('objectRemoved', "all" /* EEnv.ALL */, () => this.updateInspector(null));
         EventBus.subscribe('objectChanged', "viewport" /* EEnv.VIEWPORT */, () => this.objectChanged());
         EventBus.subscribe('transformMoved', "viewport" /* EEnv.VIEWPORT */, () => this.objectChanged());
+        EventBus.subscribe('sceneReset', "all" /* EEnv.ALL */, () => this.updateInspector(null));
     }
     updateInspector(object) {
         if (!object) {
@@ -49,7 +50,7 @@ class Inspector {
             this.currentInspector?.deselect();
             const sceneInspector = this.objectInspectors.get('scene');
             if (sceneInspector !== undefined) {
-                sceneInspector.select(new SceneProxyObject());
+                sceneInspector.select(App.getSceneProxy());
                 this.currentInspector = sceneInspector;
                 return;
             }

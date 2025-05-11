@@ -1,6 +1,7 @@
 import { App } from '../core/app.js';
 import { createTeapot } from '../core/vars.js';
 import { ExportType } from '../managers/exportManager.js';
+import { EventBus } from '../core/events.js';
 
 class Toolbar {
     closed = false;
@@ -232,6 +233,8 @@ class Toolbar {
                 App.getTransformControls().detach();
                 App.getObjectManager().removeObjects();
                 App.getIOManager().clearSceneCache();
+                App.getSceneProxy().reset();
+                EventBus.notify('sceneReset', "all" /* EEnv.ALL */);
             }
         });
     }

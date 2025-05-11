@@ -1,6 +1,7 @@
 import { SphereGeometry, MeshBasicMaterial, Mesh, Vector3 } from 'three';
 import { getEditHandleColor, getHighlightColor, getSelectedColor } from '../core/vars.js';
 import { App } from '../core/app.js';
+import { EventBus } from '../core/events.js';
 
 class EditHandle {
     parentObject;
@@ -19,6 +20,9 @@ class EditHandle {
         this.mesh.renderOrder = 1001;
         this.adjustScale();
         App.onControlsChange(this.adjustScale.bind(this));
+        EventBus.subscribe('modeSwitched', "all" /* EEnv.ALL */, () => {
+            this.material.color.set(getEditHandleColor());
+        });
     }
     getMesh() {
         return this.mesh;
