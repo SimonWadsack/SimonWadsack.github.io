@@ -284,7 +284,7 @@ const fetchTexture = async (folder, map) => {
     const url = `textures/${folder}/${map}`;
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`Failed to fetch texture: ${response.statusText}`);
+        return null;
     }
     const blob = await response.blob();
     if (blob.size === 0 || blob.type === 'text/html')
