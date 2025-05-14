@@ -1,9 +1,11 @@
 import { fetchTexture } from '../../../core/app.js';
-import { TextureElement, ButtonSelectElement, SliderElement } from 'lacery';
+import { TextureElement, ButtonSelectElement, Vec2Element, SliderElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
-import { BoolUniform, TextureUniform, FloatUniform } from '../shadingUniform.js';
+import { Vec2Uniform, BoolUniform, TextureUniform, FloatUniform } from '../shadingUniform.js';
+import { Vector2 } from 'three';
 
 class BlinnPhongShadingModel extends ShadingModel {
+    tiling;
     useMainTexture;
     mainTexture;
     useRoughnessMap;
@@ -20,6 +22,7 @@ class BlinnPhongShadingModel extends ShadingModel {
     aoElement;
     constructor() {
         super();
+        this.tiling = new Vec2Uniform("tiling", new Vector2(1, 1));
         this.useMainTexture = new BoolUniform("useMainTexture", false);
         this.mainTexture = new TextureUniform("mainTexture", null);
         this.useRoughnessMap = new BoolUniform("useRoughnessMap", false);
@@ -30,6 +33,7 @@ class BlinnPhongShadingModel extends ShadingModel {
         this.normalStrength = new FloatUniform("normalStrength", 1.0);
         this.useAOMap = new BoolUniform("useAOMap", false);
         this.aoMap = new TextureUniform("aoMap", null);
+        this.uniforms.add(this.tiling);
         this.uniforms.add(this.useMainTexture);
         this.uniforms.add(this.mainTexture);
         this.uniforms.add(this.roughnessMap);
@@ -73,6 +77,14 @@ class BlinnPhongShadingModel extends ShadingModel {
     }
     buildUI(group) {
         group.add(new ButtonSelectElement('Load a preset...', { 'rock': 'Rock', 'mossyrock': 'Mossy Rock', 'bark': 'Bark', 'onyx': 'Onyx' }, this.presetSelect.bind(this), { previews: ['textures/rock/albedo.jpg', 'textures/mossyrock/albedo.jpg', 'textures/bark/albedo.jpg', 'textures/onyx/albedo.jpg'], previewSize: 64 }));
+        const tilingElement = new Vec2Element('Tiling', this.tiling.value, 'x', 'y', { xStep: 0.1, yStep: 0.1 });
+        group.add(tilingElement.onChange(() => {
+            if (this.tiling.value.x < 0.1)
+                this.tiling.value.x = 0.1;
+            if (this.tiling.value.y < 0.1)
+                this.tiling.value.y = 0.1;
+            tilingElement.update();
+        }));
         group.add(this.mainElement);
         group.add(this.roughnessElement);
         group.add(new SliderElement('Shininess', this.shininess, 'value', { min: 0.01, max: 1.0, step: 0.01 }));
@@ -82,11 +94,14 @@ class BlinnPhongShadingModel extends ShadingModel {
     }
     toJSON() {
         return {
+            tiling: [this.tiling.value.x, this.tiling.value.y],
             shininess: this.shininess.value,
             normalStrength: this.normalStrength.value,
         };
     }
     fromJSON(json) {
+        this.tiling.value.x = json.tiling[0];
+        this.tiling.value.y = json.tiling[1];
         this.shininess.value = json.shininess;
         this.normalStrength.value = json.normalStrength;
     }
@@ -146,6 +161,8 @@ class BlinnPhongShadingModel extends ShadingModel {
 }
 function blinnPhongFragmentShader() {
     return /*glsl*/ `
+        uniform vec2 tiling;
+
         uniform bool useMainTexture;
         uniform sampler2D mainTexture;
         
@@ -172,20 +189,23 @@ function blinnPhongFragmentShader() {
         #include <lights_pars_begin>
     
         void main(){
+            // Get the tilied UV
+            vec2 uv = vUV * tiling;
+
             // Get the base color
-            vec3 albedo = useMainTexture ? texture2D(mainTexture, vUV).rgb : vColor;
+            vec3 albedo = useMainTexture ? texture2D(mainTexture, uv).rgb : vColor;
 
             // Get the normal (one minus as a weird fix beacause the vertex shader flips the sides)
             vec3 normal = normalize(vNormal);
             if(useNormalMap){
-                vec3 tangentNormal = texture2D(normalMap, vUV).xyz * 2.0 - 1.0;
+                vec3 tangentNormal = texture2D(normalMap, uv).xyz * 2.0 - 1.0;
                 float nrmStrength = normalStrength;
                 vec3 worldNormal = normalize(vTBN * tangentNormal);
                 normal = normalize(mix(normal, worldNormal, nrmStrength));
             }
 
             // Calculate the ambient occlusion
-            float ao = useAOMap ? texture2D(aoMap, vUV).r : 1.0;
+            float ao = useAOMap ? texture2D(aoMap, uv).r : 1.0;
 
             // Calculate the light direction
             vec3 lightDir = directionalLights[0].direction;
@@ -203,7 +223,7 @@ function blinnPhongFragmentShader() {
             float spec = pow(max(dot(halfDir, normal), 0.0), 200.0 * shininess);
 
             // Calculate the roughness
-            float roughness = useRoughnessMap ? texture2D(roughnessMap, vUV).r : 0.0;
+            float roughness = useRoughnessMap ? texture2D(roughnessMap, uv).r : 0.0;
             spec *= (1.0 - roughness);
 
             // Calculate the Blinn-Phong components

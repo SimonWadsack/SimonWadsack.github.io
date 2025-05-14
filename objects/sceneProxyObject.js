@@ -6,6 +6,7 @@ var SceneProxyObjectMode;
     SceneProxyObjectMode[SceneProxyObjectMode["LIGHTS"] = 0] = "LIGHTS";
     SceneProxyObjectMode[SceneProxyObjectMode["ENVIROMENT"] = 1] = "ENVIROMENT";
     SceneProxyObjectMode[SceneProxyObjectMode["SETTINGS"] = 2] = "SETTINGS";
+    SceneProxyObjectMode[SceneProxyObjectMode["RAYTRACER"] = 3] = "RAYTRACER";
 })(SceneProxyObjectMode || (SceneProxyObjectMode = {}));
 class SceneProxyObject extends VisualObject {
     mode;

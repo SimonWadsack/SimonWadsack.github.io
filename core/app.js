@@ -3,6 +3,7 @@ import { EventBus } from './events.js';
 import { getModeBackgroundColor } from './vars.js';
 
 class App {
+    static app;
     static scene;
     static pCamera;
     static oCamera;
@@ -62,26 +63,32 @@ class App {
         return this.isDarkMode;
     }
     static setMode(darkMode = false) {
-        const app = document.getElementById('app');
-        if (!app)
-            return;
         if (darkMode) {
             this.isDarkMode = true;
-            app.classList.add('sl-theme-dark');
+            this.app.classList.add('sl-theme-dark');
         }
         else {
             this.isDarkMode = false;
-            app.classList.remove('sl-theme-dark');
+            this.app.classList.remove('sl-theme-dark');
         }
         App.getScene().background = new Color(getModeBackgroundColor());
         App.getIOManager().setFlagCache('darkMode', this.isDarkMode);
         EventBus.notify('modeSwitched', "all" /* EEnv.ALL */, this.isDarkMode);
+    }
+    static getApp() {
+        return this.app;
+    }
+    static setApp(app) {
+        this.app = app;
     }
     static getScene() {
         return this.scene;
     }
     static getCamera() {
         return this.is2D ? this.oCamera : this.pCamera;
+    }
+    static getPerspectiveCamera() {
+        return this.is2D ? null : this.pCamera;
     }
     static getRenderer() {
         return this.renderer;
@@ -280,6 +287,7 @@ class App {
         return image;
     }
 }
+// TODO: add preset.json to the presets to only load the textures that are used in the preset & maybe move this function
 const fetchTexture = async (folder, map) => {
     const url = `textures/${folder}/${map}`;
     const response = await fetch(url);

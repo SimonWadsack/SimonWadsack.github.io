@@ -6,10 +6,11 @@ import { EXRLoader } from 'three/examples/jsm/Addons.js';
 import { EquirectangularReflectionMapping, NearestFilter, Color } from 'three';
 import { getModeBackgroundColor } from '../../core/vars.js';
 import { EventBus } from '../../core/events.js';
+import { RaytracerMode } from '../../plugins/raytracer/raytracerMode.js';
 
 class SceneInspector extends ObjectInspector {
     constructor(lace) {
-        const modes = [new LightsMode(), new EnviromentMode(), new SettingsMode()];
+        const modes = [new LightsMode(), new EnviromentMode(), new SettingsMode(), new RaytracerMode()];
         super("Scene", lace, modes);
     }
 }
@@ -46,7 +47,9 @@ class LightsMode extends ObjectInspectorMode {
         App.getAmbientLight().intensity = this.ambParams.ambLightIntensity;
         App.getAmbientLight().color.set(this.ambParams.ambLightColor);
     }
-    select(object) { }
+    select(object) {
+        this.objectChanged(object);
+    }
     deselect() { }
     objectChanged(object) {
         this.dirParams.dirLightRotation = object.dirRotation;
@@ -124,6 +127,7 @@ class EnviromentMode extends ObjectInspectorMode {
     select(object) {
         if (App.getScene().environment === null)
             this.updateEnviroment();
+        this.objectChanged(object);
     }
     deselect() { }
     objectChanged(object) {

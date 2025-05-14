@@ -20,6 +20,9 @@ function init() {
     registerIconLibrary('lucide', {
         resolver: (name) => `https://cdn.jsdelivr.net/npm/lucide-static@0.482.0/icons/${name}.svg`
     });
+    const app = document.getElementById('app');
+    if (!app)
+        return;
     const viewportElement = document.getElementById('viewport');
     if (!viewportElement)
         return;
@@ -29,6 +32,7 @@ function init() {
     const hierarchyElement = document.getElementById('hierarchy');
     if (!hierarchyElement)
         return;
+    App.setApp(app);
     initScene(viewportElement);
     initGrid();
     initTooltip(viewportElement);

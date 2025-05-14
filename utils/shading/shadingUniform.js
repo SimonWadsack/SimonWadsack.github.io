@@ -1,4 +1,4 @@
-import { Texture } from 'three';
+import { Texture, RepeatWrapping } from 'three';
 import { App } from '../../core/app.js';
 
 //#region Uniform Types
@@ -46,11 +46,17 @@ class BoolUniform extends ShadingUniform {
         super(name, UniformType.BOOL, value);
     }
 }
+class Vec2Uniform extends ShadingUniform {
+    constructor(name, value) {
+        super(name, UniformType.VEC2, value);
+    }
+}
 class TextureUniform extends ShadingUniform {
     blob;
     image;
     constructor(name, blob) {
         const texture = new Texture();
+        texture.wrapS = texture.wrapT = RepeatWrapping;
         super(name, UniformType.TEXTURE, texture);
         if (blob !== null) {
             this.image = new Image();
@@ -72,6 +78,7 @@ class TextureUniform extends ShadingUniform {
             URL.revokeObjectURL(this.image.src);
         this.value.dispose();
         const texture = new Texture();
+        texture.wrapS = texture.wrapT = RepeatWrapping;
         this.value = texture;
         if (this.blob !== null) {
             if (this.image === null)
@@ -91,4 +98,4 @@ class TextureUniform extends ShadingUniform {
 }
 //#endregion
 
-export { BoolUniform, FloatUniform, ShadingUniform, TextureUniform, UniformType };
+export { BoolUniform, FloatUniform, ShadingUniform, TextureUniform, UniformType, Vec2Uniform };

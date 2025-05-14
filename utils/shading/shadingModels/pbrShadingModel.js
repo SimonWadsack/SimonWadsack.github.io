@@ -1,9 +1,11 @@
+import { Vector2 } from 'three';
 import { fetchTexture } from '../../../core/app.js';
-import { TextureElement, ButtonSelectElement, SliderElement } from 'lacery';
+import { TextureElement, ButtonSelectElement, Vec2Element, SliderElement } from 'lacery';
 import { ShadingModel } from '../shadingModel.js';
-import { BoolUniform, TextureUniform, FloatUniform } from '../shadingUniform.js';
+import { Vec2Uniform, BoolUniform, TextureUniform, FloatUniform } from '../shadingUniform.js';
 
 class PBRShadingModel extends ShadingModel {
+    tiling;
     useMainTexture;
     mainTexture;
     useRoughnessMap;
@@ -25,6 +27,7 @@ class PBRShadingModel extends ShadingModel {
     constructor() {
         super();
         this.enviroment = true;
+        this.tiling = new Vec2Uniform("tiling", new Vector2(1, 1));
         this.useMainTexture = new BoolUniform("useMainTexture", false);
         this.mainTexture = new TextureUniform("mainTexture", null);
         this.useRoughnessMap = new BoolUniform("useRoughnessMap", false);
@@ -38,6 +41,7 @@ class PBRShadingModel extends ShadingModel {
         this.normalStrength = new FloatUniform("normalStrength", 1.0);
         this.useAOMap = new BoolUniform("useAOMap", false);
         this.aoMap = new TextureUniform("aoMap", null);
+        this.uniforms.add(this.tiling);
         this.uniforms.add(this.useMainTexture);
         this.uniforms.add(this.mainTexture);
         this.uniforms.add(this.roughnessMap);
@@ -90,6 +94,14 @@ class PBRShadingModel extends ShadingModel {
     }
     buildUI(group) {
         group.add(new ButtonSelectElement('Load a preset...', { 'metal': 'Metal', 'rustymetal': 'Rusty Metal', 'facade': 'Facade', 'onyx': 'Onyx', 'rock': 'Rock', 'mossyrock': 'Mossy Rock', 'bark': 'Bark' }, this.presetSelect.bind(this), { previews: ['textures/metal/albedo.jpg', 'textures/rustymetal/albedo.jpg', 'textures/facade/albedo.jpg', 'textures/onyx/albedo.jpg', 'textures/rock/albedo.jpg', 'textures/mossyrock/albedo.jpg', 'textures/bark/albedo.jpg'], previewSize: 64 }));
+        const tilingElement = new Vec2Element('Tiling', this.tiling.value, 'x', 'y', { xStep: 0.1, yStep: 0.1 });
+        group.add(tilingElement.onChange(() => {
+            if (this.tiling.value.x < 0.1)
+                this.tiling.value.x = 0.1;
+            if (this.tiling.value.y < 0.1)
+                this.tiling.value.y = 0.1;
+            tilingElement.update();
+        }));
         group.add(this.mainElement);
         group.add(this.roughnessElement);
         group.add(new SliderElement('Roughness', this.roughness, 'value', { min: 0.04, max: 1.0, step: 0.01 }));
@@ -101,12 +113,15 @@ class PBRShadingModel extends ShadingModel {
     }
     toJSON() {
         return {
+            tiling: [this.tiling.value.x, this.tiling.value.y],
             roughness: this.roughness.value,
             normalStrength: this.normalStrength.value,
             metallic: this.metallic.value,
         };
     }
     fromJSON(json) {
+        this.tiling.value.x = json.tiling[0];
+        this.tiling.value.y = json.tiling[1];
         this.roughness.value = json.roughness;
         this.normalStrength.value = json.normalStrength;
         this.metallic.value = json.metallic;
@@ -163,6 +178,7 @@ class PBRShadingModel extends ShadingModel {
             this.aoMap.update();
             this.mainElement.updateBlob();
             this.roughnessElement.updateBlob();
+            this.metallicElement.updateBlob();
             this.normalElement.updateBlob();
             this.aoElement.updateBlob();
             this.updateCallback?.();
@@ -175,6 +191,8 @@ class PBRShadingModel extends ShadingModel {
 }
 function pbrFragmentShader() {
     return /*glsl*/ `
+        uniform vec2 tiling;
+
         uniform bool useMainTexture;
         uniform sampler2D mainTexture;
         
@@ -240,21 +258,23 @@ function pbrFragmentShader() {
         }
 
         void main() {
-            vec3 albedo = useMainTexture ? texture2D(mainTexture, vUV).rgb : vColor;
+            vec2 uv = vUV * tiling;
+
+            vec3 albedo = useMainTexture ? texture2D(mainTexture, uv).rgb : vColor;
             
             vec3 normal = normalize(vNormal);
             if(useNormalMap){
-                vec3 tangentNormal = texture2D(normalMap, vUV).xyz * 2.0 - 1.0;
+                vec3 tangentNormal = texture2D(normalMap, uv).xyz * 2.0 - 1.0;
                 float nrmStrength = normalStrength;
                 vec3 worldNormal = normalize(vTBN * tangentNormal);
                 normal = normalize(mix(normal, worldNormal, nrmStrength));
             }
 
-            float rough = useRoughnessMap ? texture2D(roughnessMap, vUV).r * roughness : roughness;
+            float rough = useRoughnessMap ? texture2D(roughnessMap, uv).r * roughness : roughness;
 
-            float ao = useAOMap ? texture2D(aoMap, vUV).r : 1.0;
+            float ao = useAOMap ? texture2D(aoMap, uv).r : 1.0;
 
-            float metal = useMetallicMap ? texture2D(metallicMap, vUV).r * metallic : metallic;
+            float metal = useMetallicMap ? texture2D(metallicMap, uv).r * metallic : metallic;
 
             vec3 lightColor = directionalLights[0].color;
             vec3 ambientColor = ambientLightColor;

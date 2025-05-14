@@ -3,8 +3,10 @@ import { App } from '../core/app.js';
 class InteractionsManager {
     keydowns;
     static blockedTags = ['SL-INPUT', 'SL-COLOR-PICKER'];
+    dialog;
     constructor() {
         this.keydowns = new Map();
+        this.dialog = document.createElement('sl-dialog');
         window.addEventListener('keydown', (event) => {
             const key = event.key;
             const target = event.target;
@@ -52,35 +54,36 @@ class InteractionsManager {
         alert.toast();
     }
     confirm(header, message, resolve) {
-        const dialog = document.createElement('sl-dialog');
-        dialog.label = header;
-        dialog.classList.add('confirm-dialog');
-        dialog.addEventListener('sl-request-close', (event) => {
+        this.dialog.innerHTML = '';
+        this.dialog.label = header;
+        this.dialog.classList.add('confirm-dialog');
+        this.dialog.style.color = 'var(--sl-input-color)';
+        this.dialog.addEventListener('sl-request-close', (event) => {
             resolve(false);
         });
         const messageText = document.createElement('div');
         messageText.innerHTML = message;
-        dialog.appendChild(messageText);
+        this.dialog.appendChild(messageText);
         const confirmButton = document.createElement('sl-button');
         confirmButton.variant = 'success';
         confirmButton.innerText = 'Confirm';
         confirmButton.slot = 'footer';
         confirmButton.onclick = () => {
             resolve(true);
-            dialog.hide();
+            this.dialog.hide();
         };
-        dialog.appendChild(confirmButton);
+        this.dialog.appendChild(confirmButton);
         const cancelButton = document.createElement('sl-button');
         cancelButton.variant = 'danger';
         cancelButton.innerText = 'Cancel';
         cancelButton.slot = 'footer';
         cancelButton.onclick = () => {
             resolve(false);
-            dialog.hide();
+            this.dialog.hide();
         };
-        dialog.appendChild(cancelButton);
-        document.body.appendChild(dialog);
-        dialog.show();
+        this.dialog.appendChild(cancelButton);
+        App.getApp().appendChild(this.dialog);
+        this.dialog.show();
     }
 }
 
