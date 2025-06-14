@@ -1,0 +1,19 @@
+A *Uniform B-Spline Curve* (UBS Curve) is a type of spline curve commonly used in computer graphics, CAD, and modeling for creating smooth and flexible shapes.
+
+It is defined by a *set of control points* #p_i and a *uniform knot vector* #[t_0,t_1,...,t_{n+k+1}], which determines how the control points influence the curve. Unlike Bézier Curves, B-Splines offer *local control*, that means moving a control point only affects a limited region of the curve.
+
+The UBS Curve of degree #k is defined as:
+@ c(t) = \sum_{i=0}^{n} N_{i,k}(t) \, p_i @
+where #N_{i,k}(t) are the *B-Spline basis functions* of degree #k, and #t is the parameter in the interval defined by the knot vector.
+The *B-Spline basis functions* #N_{i,k}(t) are defined as follows:
+
+@ N_{i,0}(t) = \begin{cases} 1 & \text{if } t_i \leq t < t_{i+1} \\ 0 & \text{otherwise} \end{cases} @
+
+@ N_{i,k}(t) = \frac{t - t_i}{t_{i+k} - t_i} N_{i,k-1}(t) + \frac{t_{i+k+1} - t}{t_{i+k+1} - t_{i+1}} N_{i+1,k-1}(t) @
+
+The *uniform* property means that the knots are equally spaced, simplifying computation and ensuring consistent behavior across the curve.
+
+B-Spline Curves have several advantages:
+- *Local control*: Adjusting one control point only affects nearby curve segments.
+- *Lower degree*: The degree of the curve does not increase with the number of control points.
+- *Smoothness*: B-Splines can easily achieve #C^2 continuity, resulting in very smooth curves.

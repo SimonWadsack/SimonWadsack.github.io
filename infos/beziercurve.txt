@@ -1,0 +1,9 @@
+A *Bézier Curve* #b(t) is a parametric curve widely used in computer graphics, animation, and design for modeling smooth and scalable shapes.
+
+It is defined by a *set of control points* #p_i, which determine the curve's shape.
+The curve starts at the first control point and ends at the last one, with intermediate control points influencing its curvature.
+@ b(t) = \sum_{i=0}^{n} B_{i,n}(t) \, p_i @
+With degree #n , #t #\in #[0,1] and #B_{i,n}(t) being the *Berstein polynomials*, defined by:
+@ B_{i,n}(t) = \binom{n}{i} \, t^{i} \, (1-t)^{n-i} @
+Another way of representing a Bézier Curve is the *De-Casteljau Algorithm*. 
+It is a recursive method to evaluate Bézier curves. It works by *linearly interpolating* between control points for a given parameter #t, repeatedly, until a single point is obtained.

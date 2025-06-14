@@ -1,0 +1,13 @@
+A *Uniform Rational B-Spline Curve* (URBS Curve) is very similar to a *Uniform B-Spline Curve*, for basic information about B-Splines refer to the info mode of the Uniform B-Spline Curve Object.
+
+The difference of the URBS Curve is that each control point #p_i gets a *weight* #w_i that controls how much this control point influences the curve.
+
+The formula for #c(t) changes to:
+
+@ c(t) = \frac{ \sum_{i=0}^{n} N_{i,k}(t) \, w_i \, p_i }{ \sum_{i=0}^{n} N_{i,k}(t) \, w_i } @
+
+This allows the URBS Curve to represent a wider variety of shapes, including *exact circles and ellipses*, which are not possible with standard B-Splines.
+
+By adjusting the weights #w_i, you can make the curve pass closer to or further from specific control points. Larger weights increase the influence of a control point, pulling the curve closer to it.
+
+URBS Curves are widely used in computer-aided design (CAD) and graphics because of their flexibility and precision.

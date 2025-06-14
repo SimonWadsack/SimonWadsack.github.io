@@ -1,0 +1,16 @@
+A *Bézier Patch* #b(u,v) is a parametric surface based on Bézier Curves, specifically combining many curves in 2 directions to describe a surface.
+
+Just like a *Bézier Curve*, the Bézier Patch is defined by a set of control points #p_{i,j} with degrees #n and #m .
+The intuition behind a Bézier Patch is first constructing Bézier Curves along the rows of the control points and then along the columns (or vice versa), resulting in a smooth surface.
+
+To calculate a point on the patch it is represented as a *Tensor Product Surface*, this skips the sampling of Bézier Curves in both directions after each other and combines the computation:
+@ b(u,v) = \sum_{i=0}^{n} \sum_{j=0}^{m} B_{i,n}(u) \, B_{j,m}(v) \, p_{i,j} @
+With #u,v #\in #[0,1] and #B_{i,n}(t) being the *Berstein polynomials* again. For more information refer to the info mode of the Bézier Curve.
+
+The Bézier Patch is widely used in computer graphics and CAD applications for modeling smooth and flexible surfaces.
+They can be used to represent many objects, such as the Utah Teapot, which consists of 32 bycubic Bézier Patches. Load a Utah Teapot under *File > Examples*.
+
+*Properties of Bézier Patches:*
+- The surface always lies within the convex hull of its control points.
+- The patch interpolates the corner control points.
+- The degree of the patch in the #u and #v directions is determined by the number of control points in each direction.

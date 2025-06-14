@@ -1,0 +1,11 @@
+A *Bézier Spline* is a *composition of many cubic Bézier Curves* (cubic = 4 Control Points).
+
+It solves many problems of the Bézier Curve and is widely used in graphics programs such as Photoshop, Illustrator, and many more, and is better known as the *Pen Tool*.
+The first problem it solves is *local control*. A Bézier Curve does not have local control, that means moving one control point changes the entire shape of the curve.
+The Bézier Spline uses the fact that Bézier Curves interpolate from the start to the endpoint and connects many of these curves together. That way, one curve's start point is another curve's endpoint, and it only influences those two curves.
+
+Another problem of the Bézier Curve is a too high polynomial degree. With each control point, the degree is also increased. By using *many cubic Bézier Curves*, the maximum degree stays at 3.
+
+A problem that arises from connecting Bézier Curves is continuity. This is solved by the two inner control points of two connecting curves being reflected based on the connecting outer point, this ensures a smooth transition.
+
+For information about *Bézier Curves* refer to the info mode of the Bézier Curve Object.

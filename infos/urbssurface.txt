@@ -1,0 +1,10 @@
+A *Uniform Rational B-Spline Surface* (URBS Surface) is a parametric surface that extends the Uniform B-Spline Surface (UBS Surface) by assigning a weight #w_{i,j} to each control point #p_{i,j}. 
+This allows for even greater flexibility and the ability to represent exact shapes like circles and ellipsoids, which are not possible with standard B-Spline surfaces.
+
+Just like the Bézier Patch and UBS Surface, the URBS Surface is defined by a grid of control points and uses the tensor product of basis functions in two directions. The difference is that each control point's influence is scaled by its weight.
+
+The formula for a URBS Surface of degree #k in both directions is: 
+@ c(u,v) = \frac{ \sum_{i=0}^{n} \sum_{j=0}^{m} N_{i,k}(u) \, N_{j,k}(v) \, w_{i,j} \, p_{i,j} }{ \sum_{i=0}^{n} \sum_{j=0}^{m} N_{i,k}(u) \, N_{j,k}(v) \, w_{i,j} } @
+where #N_{i,k}(t) are the *B-Spline basis functions* of degree #k, and #u,v are the parameters in the interval defined by the knot vector in both directions. For more information refer to the info mode of the URBS Curve.
+
+The Uniform Rational B-Spline Surface is widely used in computer graphics and CAD applications for modeling smooth and flexible surfaces.

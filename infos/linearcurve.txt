@@ -1,0 +1,4 @@
+A *Linear Curve* is the simplest mathematical curve and just connects up the control points in a straight line.
+
+It does not provide any smoothing or curvature between the points. 
+Linear curves are useful for visualizing the basic structure of a set of points, for example, for the control polygon of a Bézier Curve or a B-Spline.

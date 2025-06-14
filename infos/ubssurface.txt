@@ -1,0 +1,10 @@
+A *Uniform B-Spline Surface* (UBS Surface) is a parametric surface based on UBS Curves, specifically combining many curves in 2 directions to describe a surface.
+
+Just like the *Bézier Patch* it has a grid of control points #p_{i,j} and it follows the same intuition of constructing cuves first along the rows and then along the columns.
+Because it uses *UBS Curves* it again has a *uniform knot vector*, this time in both directions.
+
+The *UBS Surface* of degree #k is defined as a *Tensor Product Surface* as follows:
+@ c(u,v) = \sum_{i=0}^{n} \sum_{j=0}^{m} N_{i,k}(u) \, N_{j,k}(v) \, p_{i,j} @
+where #N_{i,k}(t) are the *B-Spline basis functions* of degree #k, and #u,v are the parameters in the interval defined by the knot vector in both directions. For more information refer to the info mode of the UBS Curve.
+
+The Uniform B-Spline Surface is widely used in computer graphics and CAD applications for modeling smooth and flexible surfaces.
