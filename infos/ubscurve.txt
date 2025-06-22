@@ -16,4 +16,4 @@ The *uniform* property means that the knots are equally spaced, simplifying comp
 B-Spline Curves have several advantages:
 - *Local control*: Adjusting one control point only affects nearby curve segments.
 - *Lower degree*: The degree of the curve does not increase with the number of control points.
-- *Smoothness*: B-Splines can easily achieve #C^2 continuity, resulting in very smooth curves.
+- *Smoothness*: B-Splines can easily achieve higher continuity, resulting in very smooth curves.
